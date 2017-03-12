@@ -1,6 +1,5 @@
 import Kernel, except: [to_string: 1]
 
-
 defmodule Formatter do
   @typedoc "Abstract Syntax Tree (AST)"
   @type t :: expr | {t, t} | atom | number | binary | pid | fun | [t]
@@ -44,6 +43,24 @@ defmodule Formatter do
       :.                                      -> {:left, 310}
     end
   end
+
+  # @line_map %{}
+  @lines %{}
+  @comments %{2 => "comment1"}
+
+  def format(file_name) do
+    file_content = File.read!(file_name)
+    lines = String.split(file_content, "\n")
+    for {s, i} <- Enum.with_index(lines) do
+      Map.put(@lines, i, s)
+    end
+    # TODO: retrieve comments from file_content via tokenization
+    ast = elem(Code.string_to_quoted(file_content), 1)
+    IO.inspect ast
+    IO.puts "\n"
+    IO.puts to_string(ast)
+  end
+
   @doc """
   Converts the given expression to a binary.
   The given `fun` is called for every node in the AST with two arguments: the
@@ -209,11 +226,17 @@ defmodule Formatter do
 
   # All other calls
   def to_string({target, _, args} = ast, fun) when is_list(args) do
+    {_, context, _} = ast
+    if context != [] do
+      IO.write "line: #{context[:line]}, target: "
+      IO.inspect target
+    else
+
+    end
     if sigil = sigil_call(ast, fun) do
       sigil
     else
       {list, last} = :elixir_utils.split_last(args)
-      IO.puts "target: #{target}"
       fun.(ast, case kw_blocks?(last) do
         true  -> call_to_string_with_args(target, list, fun) <> kw_blocks_to_string(last, fun)
         false -> call_to_string_with_args(target, args, fun)
@@ -333,6 +356,7 @@ defmodule Formatter do
     do: "(" <> module_to_string(arg, fun) <> ")."
   defp call_to_string({:., _, [arg]}, fun),
     do: module_to_string(arg, fun) <> "."
+  # e.g. env.module()
   defp call_to_string({:., _, [left, right]}, fun),
     do: module_to_string(left, fun) <> "." <> call_to_string(right, fun)
   defp call_to_string(other, fun),
@@ -350,9 +374,9 @@ defmodule Formatter do
     end
   end
 
+  # turn (a, b, c) into strings
   defp args_to_string(args, fun) do
     {list, last} = :elixir_utils.split_last(args)
-    IO.inspect last
     if last != [] and Inspect.List.keyword?(last) do
       prefix =
         case list do
@@ -371,7 +395,7 @@ defmodule Formatter do
         true  -> acc <> kw_block_to_string(x, Keyword.get(kw, x), fun)
         false -> acc
       end
-    end) <> "end\n"
+    end) <> "end"
   end
 
   # print do ... end
