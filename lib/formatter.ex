@@ -44,22 +44,78 @@ defmodule Formatter do
     end
   end
 
-  # @line_map %{}
-  @lines %{}
-  @comments %{2 => "comment1"}
+
 
   def format(file_name) do
     file_content = File.read!(file_name)
     lines = String.split(file_content, "\n")
+    Agent.start_link(fn -> %{} end, name: :lines)
+    Agent.start_link(fn -> %{} end, name: :comments)
     for {s, i} <- Enum.with_index(lines) do
-      Map.put(@lines, i, s)
+      s = String.trim(s)
+      update_line(i+1, s)
+      if String.first(s) == "#" do
+        Agent.update(:comments, fn map ->
+          Map.put(map, i+1, String.slice(s, 1, String.length(s)))
+        end)
+      end
     end
-    # TODO: retrieve comments from file_content via tokenization
-    ast = elem(Code.string_to_quoted(file_content), 1)
+    # TODO: retrieve comments from file_content via tokenization to handle inline comments
+    {_, ast} = Code.string_to_quoted(file_content)
+    {ast, prev_ctx} = preprocess(ast)
+    # TODO: display remaining comments if any, after last accessed line
     IO.inspect ast
     IO.puts "\n"
-    IO.puts to_string(ast)
+    IO.puts to_string(ast, fn ast, string ->
+      if is_tuple(ast) and tuple_size(ast) == 3 do
+        {_, ctx, _} = ast
+        if Keyword.has_key?(ctx, :new_line), do: string = ctx[:new_line] <> string
+        if Keyword.has_key?(ctx, :comments), do: string = ctx[:comments] <> string
+      end
+      string
+    end)
   end
+
+  defp preprocess(ast) do
+    Macro.prewalk(ast, [], fn ast, prev_ctx ->
+      # TODO: insert lineno in kw_list e.g. [do: {...}]
+      if is_tuple(ast) and tuple_size(ast) == 3 do
+        {sym, curr_ctx, args} = ast
+        if prev_ctx != [] and curr_ctx != [] do
+          ast = {sym, update_context(curr_ctx, prev_ctx), args}
+        end
+        if curr_ctx != [], do: prev_ctx = curr_ctx
+      end
+      { ast, prev_ctx}
+    end)
+  end
+
+  defp update_context(curr_ctx, prev_ctx) do
+    curr_lineno = curr_ctx[:line]
+    prev_lineno = prev_ctx[:line]
+
+    curr_ctx = [{:prev, prev_lineno} | curr_ctx]
+    curr_ctx = [{:comments, get_comments(curr_lineno-1, prev_lineno)} | curr_ctx]
+    [{:new_line, get_newline(curr_lineno-1, prev_lineno)} | curr_ctx]
+  end
+
+  defp get_line(k), do: Agent.get(:lines, fn map -> Map.get(map, k) end)
+  defp update_line(k, v), do: Agent.update(:lines, fn map -> Map.put(map, k, v) end)
+
+  defp get_newline(curr, prev) when curr < prev, do: ""
+  defp get_newline(curr, prev), do: get_newline(curr-1, prev, get_line(curr))
+  defp get_newline(curr, prev, ""), do: "\n"
+  defp get_newline(curr, prev, _), do: ""
+
+  defp get_comments(curr, prev) when curr < prev, do: ""
+  defp get_comments(curr, prev, _) when curr < prev, do: ""
+  defp get_comments(curr, prev), do: get_comments(curr, prev, get_line(curr))
+  defp get_comments(curr, prev, "#" <> s) do
+    s = get_newline(curr-1, prev) <> "# " <> String.trim(s) <> "\n"
+    get_comments(curr-1, prev, get_line(curr-1)) <> s
+  end
+  defp get_comments(curr, prev, ""), do: get_comments(curr-1, prev, get_line(curr-1))
+  defp get_comments(curr, prev, _), do: ""
 
   @doc """
   Converts the given expression to a binary.

@@ -1,9 +1,20 @@
 def asdf(arg) do
 	1 + 2 + 3
+
+
+	1 + 2
+
+
+
+	#comment here
+	#comment here
+
+	2 + 3
 end
 
-def asdf(arg) do
-	1 + 2 + 3
+# comment
+def hello(arg1) do
+	"asdfasdf" <> "b"
 end
 
 # def inspect(false), do: 1+2+3
