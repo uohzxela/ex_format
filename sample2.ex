@@ -122,12 +122,15 @@ defmodule Formatter do
   defp multiline?({_, ctx, _} = ast), do: ctx != [] and ctx[:line] > ctx[:prev]
   defp multiline?(_ast), do: false
 
+  defp get_first_token(nil), do: ""
   defp get_first_token(line) do
-    get_line(line)
-    |> String.trim_leading
-    |> String.split
-    |> List.first   
+    token =
+      line
+      |> String.trim_leading
+      |> String.split
+      |> List.first
   end
+
   @doc """
   Converts the given expression to a binary.
   The given `fun` is called for every node in the AST with two arguments: the
@@ -241,8 +244,8 @@ defmodule Formatter do
     padding = " "
     newline = ""
     if multiline?(ast) do
-      token = get_first_token(ctx[:prev])
-      padding = padding <> Enum.join(for <<x <- token>>, do: " ")
+      token = get_first_token(get_line ctx[:prev])
+      padding = Enum.join(for 0..String.length(token), do: " ")
       newline = "\n"
     end
     # IO.puts op_to_string(left, fun, :when, :left)
