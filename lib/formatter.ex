@@ -60,32 +60,34 @@ defmodule Formatter do
     end
     # TODO: retrieve comments from file_content via tokenization to handle inline comments
     {_, ast} = Code.string_to_quoted(file_content)
-    {ast, prev_ctx} = preprocess(ast)
+    {ast, _prev_ctx} = preprocess(ast)
     # TODO: display remaining comments if any, after last accessed line
     IO.inspect ast
     IO.puts "\n"
     IO.puts to_string(ast, fn ast, string ->
-      if is_tuple(ast) and tuple_size(ast) == 3 do
-        {_, ctx, _} = ast
-        if Keyword.has_key?(ctx, :new_line), do: string = ctx[:new_line] <> string
-        if Keyword.has_key?(ctx, :comments), do: string = ctx[:comments] <> string
+      case is_tuple(ast) and tuple_size(ast) == 3 do
+        true ->
+          {_, ctx, _} = ast
+          Enum.join [ctx[:comments], ctx[:new_line], string]
+        false -> string
       end
-      # IO.puts string
-      string
     end)
   end
 
   defp preprocess(ast) do
     Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
       # TODO: insert lineno in kw_list e.g. [do: {...}]
-      if is_tuple(ast) and tuple_size(ast) == 3 do
-        {sym, curr_ctx, args} = ast
-        if prev_ctx != [] and curr_ctx != [] do
-          ast = {sym, update_context(curr_ctx, prev_ctx), args}
-        end
-        if curr_ctx != [], do: prev_ctx = curr_ctx
+      case is_tuple(ast) and tuple_size(ast) == 3 do
+        true ->
+          {sym, curr_ctx, args} = ast
+          if prev_ctx != [] and curr_ctx != [] do
+            {{sym, update_context(curr_ctx, prev_ctx), args}, curr_ctx}
+          else
+            {ast, prev_ctx}
+          end
+        false ->
+          {ast, prev_ctx}
       end
-      { ast, prev_ctx}
     end)
   end
 
@@ -104,30 +106,27 @@ defmodule Formatter do
 
   defp get_newline(curr, prev) when curr < prev, do: ""
   defp get_newline(curr, prev), do: get_newline(curr-1, prev, get_line(curr))
-  defp get_newline(curr, prev, ""), do: "\n"
-  defp get_newline(curr, prev, _), do: ""
+  defp get_newline(_curr, _prev, ""), do: "\n"
+  defp get_newline(_curr, _prev, _), do: ""
 
   defp get_comments(curr, prev) when curr < prev, do: ""
-  defp get_comments(curr, prev, _) when curr < prev, do: ""
   defp get_comments(curr, prev), do: get_comments(curr, prev, get_line(curr))
   defp get_comments(curr, prev, "#" <> s) do
     s = get_newline(curr-1, prev) <> "# " <> String.trim_leading(s) <> "\n"
     clear_line(curr)
     get_comments(curr-1, prev, get_line(curr-1)) <> s
   end
+  defp get_comments(curr, prev, _) when curr < prev, do: ""
   defp get_comments(curr, prev, ""), do: get_comments(curr-1, prev, get_line(curr-1))
-  defp get_comments(curr, prev, _), do: ""
+  defp get_comments(_curr, _prev, _), do: ""
   
-  defp multiline?({:__block__, _, _} = ast), do: true
-  defp multiline?({_, ctx, _} = ast), do: ctx != [] and ctx[:line] > ctx[:prev]
+  defp multiline?({:__block__, _, _} = _ast), do: true
+  defp multiline?({_, ctx, _} = _ast), do: ctx != [] and ctx[:line] > ctx[:prev]
   defp multiline?(_ast), do: false
 
-  defp get_first_token(line) do
-    get_line(line)
-    |> String.trim_leading
-    |> String.split
-    |> List.first   
-  end
+  defp get_first_token(nil), do: ""
+  defp get_first_token(line), do: line |> String.trim_leading |> String.split |> List.first
+
   @doc """
   Converts the given expression to a binary.
   The given `fun` is called for every node in the AST with two arguments: the
@@ -238,13 +237,15 @@ defmodule Formatter do
       else
         fun.(right, op_to_string(right, fun, :when, :right))
       end
-    padding = " "
-    newline = ""
-    if multiline?(ast) do
-      token = get_first_token(ctx[:prev])
-      padding = padding <> Enum.join(for <<x <- token>>, do: " ")
-      newline = "\n"
-    end
+
+    {padding, newline} =
+      case multiline?(ast) do
+        true ->
+          token = get_first_token(get_line ctx[:prev])
+          {Enum.join(for _ <- 0..String.length(token), do: " "), "\n"}
+        false ->
+          {" ", ""}
+      end
     # IO.puts op_to_string(left, fun, :when, :left)
     # IO.puts right
     op_to_string(left, fun, :when, :left) <> newline <> fun.(ast, "#{padding}when " <> right)

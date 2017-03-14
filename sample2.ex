@@ -245,7 +245,7 @@ defmodule Formatter do
     newline = ""
     if multiline?(ast) do
       token = get_first_token(get_line ctx[:prev])
-      padding = Enum.join(for 0..String.length(token), do: " ")
+      padding = padding <> Enum.join(for <<x <- token>>, do: " ")
       newline = "\n"
     end
     # IO.puts op_to_string(left, fun, :when, :left)
