@@ -14,6 +14,12 @@ def func2(a2,b2), do: func3(a,b)
 def func2(a2,b2), do: func3(a,b)
 def func2(a2,b2), do: func3(a,b)
 
+if something, do: asdf, else: qwer
+if something do
+	asdf
+else
+	qwer
+end
 
 
 # hello

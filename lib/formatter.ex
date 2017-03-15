@@ -44,7 +44,7 @@ defmodule Formatter do
     end
   end
 
-  def format(file_name) do
+  def process(file_name) do
     file_content = File.read!(file_name)
     lines = String.split(file_content, "\n")
     Agent.start_link(fn -> %{} end, name: :lines)
@@ -58,7 +58,7 @@ defmodule Formatter do
         end)
       end
     end
-    # TODO: retrieve comments from file_content via tokenization to handle inline comments
+    # TODO: use a lexer to retrieve comments from file_content to handle inline comments
     {_, ast} = Code.string_to_quoted(file_content)
     {ast, _prev_ctx} = preprocess(ast)
     # TODO: display remaining comments if any, after last accessed line
@@ -76,7 +76,7 @@ defmodule Formatter do
 
   defp preprocess(ast) do
     Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
-      # TODO: insert lineno in kw_list e.g. [do: {...}]
+      # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
       case is_tuple(ast) and tuple_size(ast) == 3 do
         true ->
           {sym, curr_ctx, args} = ast
@@ -125,7 +125,12 @@ defmodule Formatter do
   defp multiline?(_ast), do: false
 
   defp get_first_token(nil), do: ""
-  defp get_first_token(line), do: line |> String.trim_leading |> String.split |> List.first
+  defp get_first_token(line) do
+    line
+    |> String.trim_leading
+    |> String.split
+    |> List.first
+  end
 
   @doc """
   Converts the given expression to a binary.
@@ -163,8 +168,7 @@ defmodule Formatter do
   end
 
   def to_string({:__block__, _, _} = ast, fun) do
-    block = adjust_new_lines block_to_string(ast, fun), "\n  "
-    fun.(ast, "(\n  " <> block <> "\n)")
+    fun.(ast, block_to_string(ast, fun))
   end
 
   # Bits containers
