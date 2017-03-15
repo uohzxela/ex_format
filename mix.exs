@@ -2,7 +2,7 @@ defmodule Formatter.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :formatter,
+    [app: :exfmt,
      version: "0.1.0",
      elixir: "~> 1.4",
      escript: [main_module: Formatter.CLI],
