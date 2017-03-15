@@ -80,8 +80,9 @@ defmodule Formatter do
       case is_tuple(ast) and tuple_size(ast) == 3 do
         true ->
           {sym, curr_ctx, args} = ast
-          if prev_ctx != [] and curr_ctx != [] do
-            {{sym, update_context(curr_ctx, prev_ctx), args}, curr_ctx}
+          if curr_ctx != [] and prev_ctx != [] do
+            new_ctx = update_context(curr_ctx, prev_ctx)
+            {{sym, new_ctx, args}, new_ctx}
           else
             {ast, prev_ctx}
           end
@@ -95,9 +96,9 @@ defmodule Formatter do
     curr_lineno = curr_ctx[:line]
     prev_lineno = prev_ctx[:line]
 
-    curr_ctx = [{:prev, prev_lineno} | curr_ctx]
-    curr_ctx = [{:comments, get_comments(curr_lineno-1, prev_lineno)} | curr_ctx]
-    [{:new_line, get_newline(curr_lineno-1, prev_lineno)} | curr_ctx]
+    [{:prev, prev_lineno}] ++
+    [{:comments, get_comments(curr_lineno-1, prev_lineno)}] ++
+    [{:new_line, get_newline(curr_lineno-1, prev_lineno)}] ++ curr_ctx
   end
 
   defp get_line(k), do: Agent.get(:lines, fn map -> Map.get(map, k) end)
@@ -234,7 +235,6 @@ defmodule Formatter do
 
   # left when right
   def to_string({:when, ctx, [left, right]} = ast, fun) do
-    # IO.puts ":::::::::left when right::::::::::::::"
     right =
       if right != [] and Keyword.keyword?(right) do
         kw_list_to_string(right, fun)
@@ -263,7 +263,6 @@ defmodule Formatter do
 
   # Splat when
   def to_string({:when, _, args} = ast, fun) do
-    # IO.puts "::::::::::splat when:::::::::::"
     {left, right} = :elixir_utils.split_last(args)
     fun.(ast, "(" <> Enum.map_join(left, ", ", &to_string(&1, fun)) <> ") when " <> to_string(right, fun))
   end
@@ -314,7 +313,7 @@ defmodule Formatter do
     else
       {list, last} = :elixir_utils.split_last(args)
       fun.(ast, case kw_blocks?(last) do
-        true  -> call_to_string_with_args(target, list, fun) <> kw_blocks_to_string(last, fun)
+        true  -> call_to_string_with_args(target, list, fun) <> kw_blocks_to_string(last, fun, list)
         false -> call_to_string_with_args(target, args, fun)
       end)
     end
@@ -423,7 +422,6 @@ defmodule Formatter do
   defp sigil_args([], _fun),   do: ""
   defp sigil_args(args, fun), do: fun.(args, List.to_string(args))
 
-  # for 'def', function names etc.
   defp call_to_string(atom, _fun) when is_atom(atom),
     do: Atom.to_string(atom)
   defp call_to_string({:., _, [{:&, _, [val]} = arg]}, fun) when not is_integer(val),
@@ -440,17 +438,19 @@ defmodule Formatter do
 
 
   defp call_to_string_with_args(target, args, fun) do
-    need_parens = not target in [:def]
+    need_parens = not target in [:def, :defp, :defmacro, :if, :quote, :else]
     target = call_to_string(target, fun)
     args = args_to_string(args, fun)
     if need_parens do
       target <> "(" <> args <> ")"
     else
-      target <> " " <> args
+      case String.trim(args) do
+        "" -> target
+        _ -> target <> " " <> args
+      end
     end
   end
 
-  # turn (a, b, c) into strings
   defp args_to_string(args, fun) do
     {list, last} = :elixir_utils.split_last(args)
     if last != [] and Inspect.List.keyword?(last) do
@@ -465,13 +465,13 @@ defmodule Formatter do
     end
   end
 
-  defp kw_blocks_to_string(kw, fun) do
+  defp kw_blocks_to_string(kw, fun, args) do
     {s, multiline?} = Enum.reduce(@kw_keywords, {"", false}, fn(x, acc) ->
       if Keyword.has_key?(kw, x) do
         ast = Keyword.get(kw, x)
         {s, multiline?} = acc
         multiline? = multiline? or multiline?(ast)
-        s = s <> kw_block_to_string(x, ast, fun, multiline?)
+        s = s <> kw_block_to_string(x, ast, fun, multiline?, args)
         {s, multiline?}
       else
         acc
@@ -480,15 +480,17 @@ defmodule Formatter do
     if multiline?, do: " " <> s <> "end", else: s
   end
 
-  # print do ... end
-  defp kw_block_to_string(key, value, fun, multiline?) do
-    # indent lines in block
+  defp kw_block_to_string(key, value, fun, multiline?, args) do
     block = block_to_string(value, fun)
+    args_in_front? = length(args) > 0
     if multiline? do
       block = adjust_new_lines block, "\n  "
       Atom.to_string(key) <> "\n  " <> block <> "\n"
     else
-      ", " <> Atom.to_string(key) <> ": " <> block
+      case args_in_front? do
+        true -> ", "
+        false -> " "
+      end <> Atom.to_string(key) <> ": " <> block
     end
   end
 
