@@ -19,45 +19,71 @@ def 	func2(a2,b2), 	do: func3(a,b)
 def func2(a2,b2), do: 			func3(a,b)
 def func2(a2,		b2), do: func3(a,b)
 
-quote do: 1+2
+
+
+
+
+quote 	do: 1+2
 quote do
-	1 + 2
+1+2
 end
 
 
-
-
-
-
-if         something, do: asdf, else: qwer
-if 			something do
-	asdf
+if something, do: that_thing, else: nothing
+if something do
+that_thing
 else
-	qwer
+		nothing
 end
 
 
-# comment
-# comment
+
+# comment group 1
+# comment group 1
+
+
+# lone comment
 
 
 
+# comment group 2
+# comment group 2
 
-def func2(a2,b2), do: func3(a,b)
-def func2(a2,b2), do: func3(a,b)
-def func2(a2,b2), do: func3(a,b)
+def group(a1, b1), do: something(a1, b1)
+def group(a2, b2), do: something(a2, b2)
+
+
+def loner(a, b), do: that_thing(a, b)
 
 # TODO: preserve special indentation for guard clauses
 defmacro format_error({exception, stacktrace}) 
-	when is_list(stacktrace) and stacktrace != [] and a != 0 do
-  # ...
-  # comment
-  1 + 2
+when is_list(stacktrace) and stacktrace != [] and a != 0 do
+  1+2
 end
+
+
 defmacro format_error({exception, stacktrace}) when is_list(stacktrace) and stacktrace != [] and a != 0 do
-  # arbitrary comment
-  1 + 2
+  	1+  2
 end
+
+def func(a)
+when a > 0 do
+	1+  2
+end
+def func(a) when a > 0 do
+	1+  2
+end
+
+defp func(a, b)
+	when a > 0 and b < 0 do
+	1 +2
+end
+
+defmacro func(a, b)
+	when a > 0 and b < 0 do
+		1+2
+	end
+
 
 # # TODO: preserve multi-line indentation
 # a =

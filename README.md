@@ -30,7 +30,7 @@ Run `./exfmt [path/to/file]` to print reformatted source to standard output.
 
 ## What it can do so far
 
-- Preserve prefix comments (suffix and inline comments are not supported yet)
+- **Preserve prefix comments (suffix and inline comments are not supported yet)**
 
   ```elixir
   # prefix comment preserved
@@ -40,7 +40,7 @@ Run `./exfmt [path/to/file]` to print reformatted source to standard output.
       # suffix comment not preserved
   end
   ```
-- Preserve line breaks and collapse contiguous line breaks into a single one
+- **Preserve line breaks and collapse contiguous line breaks into a single one**
   
   Original source:
   ```elixir
@@ -119,7 +119,7 @@ Run `./exfmt [path/to/file]` to print reformatted source to standard output.
     that_thing(a, b)
   end
   ```
-- Preserve intended keyword list syntax (e.g. `do: something`)
+- **Preserve intended keyword list syntax (e.g. `do: something`)**
   
   Original source:
   
@@ -174,29 +174,43 @@ Run `./exfmt [path/to/file]` to print reformatted source to standard output.
     nothing
   end
   ```
-- Special indentation for guard clauses
+- **Special indentation for guard clauses**
 
   Original source:
   
   ```elixir
-  defmacro format_error({exception, stacktrace}) 
-  when is_list(stacktrace) and stacktrace != [] and a != 0 do
-    1+2
-  end
-
-
-  defmacro format_error({exception, stacktrace}) when is_list(stacktrace) and stacktrace != [] and a != 0 do
+  def func(a)
+  when a > 0 do
       1+  2
   end
+  def func(a) when a > 0 do
+      1+  2
+  end
+
+  defp func(a, b)
+      when a > 0 and b < 0 do
+      1 +2
+  end
+
+  defmacro func(a, b)
+      when a > 0 and b < 0 do
+          1+2
+      end
   ```
   
   Output of Macro.to_string/2:
   
   ```elixir
-  defmacro(format_error({exception, stacktrace}) when is_list(stacktrace) and stacktrace != [] and a != 0) do
+  def(func(a) when a > 0) do
     1 + 2
   end
-  defmacro(format_error({exception, stacktrace}) when is_list(stacktrace) and stacktrace != [] and a != 0) do
+  def(func(a) when a > 0) do
+    1 + 2
+  end
+  defp(func(a, b) when a > 0 and b < 0) do
+    1 + 2
+  end
+  defmacro(func(a, b) when a > 0 and b < 0) do
     1 + 2
   end
   ```
@@ -204,12 +218,21 @@ Run `./exfmt [path/to/file]` to print reformatted source to standard output.
   Output of exfmt:
   
   ```elixir
-  defmacro format_error({exception, stacktrace})
-           when is_list(stacktrace) and stacktrace != [] and a != 0 do
+  def func(a)
+      when a > 0 do
+    1 + 2
+  end
+  def func(a) when a > 0 do
     1 + 2
   end
 
-  defmacro format_error({exception, stacktrace}) when is_list(stacktrace) and stacktrace != [] and a != 0 do
+  defp func(a, b)
+       when a > 0 and b < 0 do
+    1 + 2
+  end
+
+  defmacro func(a, b)
+           when a > 0 and b < 0 do
     1 + 2
   end
   ```
