@@ -62,16 +62,18 @@ defmodule ExFormat do
     {_, ast} = Code.string_to_quoted(file_content)
     {ast, _prev_ctx} = preprocess(ast)
     # TODO: display remaining comments if any, after last accessed line
-    IO.inspect ast
-    IO.puts "\n"
-    IO.puts to_string(ast, fn ast, string ->
+    # IO.inspect ast
+    # IO.puts "\n"
+    formatted = to_string(ast, fn ast, string ->
       case is_tuple(ast) and tuple_size(ast) == 3 do
         true ->
           {_, ctx, _} = ast
-          Enum.join [ctx[:comments], ctx[:new_line], string]
+          Enum.join [ctx[:prefix_comments], ctx[:prefix_newline], string]
         false -> string
       end
     end)
+    IO.puts formatted
+    formatted
   end
 
   defp preprocess(ast) do
@@ -97,33 +99,39 @@ defmodule ExFormat do
     prev_lineno = prev_ctx[:line]
 
     [{:prev, prev_lineno}] ++
-    [{:comments, get_comments(curr_lineno-1, prev_lineno)}] ++
-    [{:new_line, get_newline(curr_lineno-1, prev_lineno)}] ++ curr_ctx
+    [{:prefix_comments, get_prefix_comments(curr_lineno-1, prev_lineno)}] ++
+    [{:prefix_newline, get_prefix_newline(curr_lineno-1, prev_lineno)}] ++ curr_ctx
   end
 
   defp get_line(k), do: Agent.get(:lines, fn map -> Map.get(map, k) end)
   defp update_line(k, v), do: Agent.update(:lines, fn map -> Map.put(map, k, v) end)
   defp clear_line(k), do: Agent.update(:lines, fn map -> Map.put(map, k, nil) end)
 
-  defp get_newline(curr, prev) when curr < prev, do: ""
-  defp get_newline(curr, prev), do: get_newline(curr-1, prev, get_line(curr))
-  defp get_newline(_curr, _prev, ""), do: "\n"
-  defp get_newline(_curr, _prev, _), do: ""
-
-  defp get_comments(curr, prev) when curr < prev, do: ""
-  defp get_comments(curr, prev), do: get_comments(curr, prev, get_line(curr))
-  defp get_comments(curr, prev, "#" <> s) do
-    s = get_newline(curr-1, prev) <> "# " <> String.trim_leading(s) <> "\n"
-    clear_line(curr)
-    get_comments(curr-1, prev, get_line(curr-1)) <> s
+  defp get_prefix_newline(curr, prev) do
+    if curr >= prev and get_line(curr) == "", do: "\n", else: ""
   end
-  defp get_comments(curr, prev, _) when curr < prev, do: ""
-  defp get_comments(curr, prev, ""), do: get_comments(curr-1, prev, get_line(curr-1))
-  defp get_comments(_curr, _prev, _), do: ""
+
+  defp get_prefix_comments(curr, prev) when curr < prev, do: ""
+  defp get_prefix_comments(curr, prev) do
+    case get_line(curr) do
+      "#" <> comment ->
+        comment = get_prefix_newline(curr-1, prev) <> "# " <> String.trim_leading(comment) <> "\n"
+        clear_line(curr) # clear current comment to avoid duplicates
+        get_prefix_comments(curr-1, prev) <> comment
+      "" ->
+        get_prefix_comments(curr-1, prev)
+      _ ->
+        ""
+    end
+  end
   
-  defp multiline?({:__block__, _, _} = _ast), do: true
-  defp multiline?({_, ctx, _} = _ast), do: ctx != [] and ctx[:line] > ctx[:prev]
-  defp multiline?(_ast), do: false
+  defp multiline?(ast) do
+    case ast do
+      {:__block__, _, _} -> true
+      {_, ctx, _} -> ctx != [] and ctx[:line] > ctx[:prev]
+      _ -> false
+    end
+  end
 
   defp get_first_token(nil), do: ""
   defp get_first_token(line) do
