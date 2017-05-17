@@ -1,4 +1,4 @@
-# elixirfmt
+# ex_format
 
 **An experimental Elixir code formatter.**
 
