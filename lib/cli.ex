@@ -1,6 +1,6 @@
-defmodule Formatter.CLI do
+defmodule ExFormat.CLI do
   @moduledoc """
-  Usage ./formatter [path/to/file]
+  Usage ./exfmt [path/to/file]
   """
   def main(argv) do
     argv
@@ -23,12 +23,13 @@ defmodule Formatter.CLI do
   """
   def process(:help) do
     IO.puts @moduledoc
-    System.halt(0)
+    # System.halt(0)
   end
 
   def process(argv) do
     if length(argv) == 1 do
-      Formatter.process List.first(argv)
+      ExFormat.process List.first(argv)
+      # IO.puts Macro.to_string Code.string_to_quoted File.read! List.first(argv)
     else
       IO.puts "Please input one argument."
       System.halt(0)

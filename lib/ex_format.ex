@@ -1,6 +1,6 @@
 import Kernel, except: [to_string: 1]
 
-defmodule Formatter do
+defmodule ExFormat do
   @typedoc "Abstract Syntax Tree (AST)"
   @type t :: expr | {t, t} | atom | number | binary | pid | fun | [t]
   @type expr :: {expr | atom, Keyword.t, atom | [t]}
