@@ -60,7 +60,7 @@ defmodule ExFormat do
     end
     # TODO: use a lexer to retrieve comments from file_content to handle inline comments
     {_, ast} = Code.string_to_quoted(file_content)
-    {ast, _prev_ctx} = preprocess(ast)
+    ast = preprocess(ast)
     # TODO: display remaining comments if any, after last accessed line
     # IO.inspect ast
     # IO.puts "\n"
@@ -77,7 +77,7 @@ defmodule ExFormat do
   end
 
   defp preprocess(ast) do
-    Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
+    {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
       # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
       case is_tuple(ast) and tuple_size(ast) == 3 do
         true ->
@@ -92,8 +92,30 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
+    # how to collect dangling suffix comments
+    # 1. collect all prefix comments first during prewalk
+    # 2. do postwalk and collect suffix comments
+    Macro.postwalk(ast, fn ast ->
+      # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
+      case is_tuple(ast) and tuple_size(ast) == 3 do
+        true ->
+          {sym, curr_ctx, args} = ast
+          if curr_ctx != [] do
+            new_ctx = update_context(curr_ctx)
+            {sym, new_ctx, args}
+          else
+            ast
+          end
+        false ->
+          ast
+      end
+    end)
   end
+  defp update_context(curr_ctx) do
+    curr_lineno = curr_ctx[:line]
 
+    [{:suffix_comments, get_suffix_comments(curr_lineno+1)}] ++ curr_ctx
+  end
   defp update_context(curr_ctx, prev_ctx) do
     curr_lineno = curr_ctx[:line]
     prev_lineno = prev_ctx[:line]
@@ -107,7 +129,7 @@ defmodule ExFormat do
   defp update_line(k, v), do: Agent.update(:lines, fn map -> Map.put(map, k, v) end)
   defp clear_line(k), do: Agent.update(:lines, fn map -> Map.put(map, k, nil) end)
 
-  defp get_prefix_newline(curr, prev) do
+  defp get_prefix_newline(curr, prev \\ 0) do
     if curr >= prev and get_line(curr) == "", do: "\n", else: ""
   end
 
@@ -115,11 +137,24 @@ defmodule ExFormat do
   defp get_prefix_comments(curr, prev) do
     case get_line(curr) do
       "#" <> comment ->
-        comment = get_prefix_newline(curr-1, prev) <> "# " <> String.trim_leading(comment) <> "\n"
+        comment = get_prefix_newline(curr-1, prev) <> "#" <> comment <> "\n"
         clear_line(curr) # clear current comment to avoid duplicates
         get_prefix_comments(curr-1, prev) <> comment
       "" ->
         get_prefix_comments(curr-1, prev)
+      _ ->
+        ""
+    end
+  end
+
+  defp get_suffix_comments(curr) do
+    case get_line(curr) do
+      "#" <> comment ->
+        comment = "\n" <> get_prefix_newline(curr-1) <> "#" <> comment
+        clear_line(curr)
+        comment <> get_suffix_comments(curr+1)
+      "" ->
+        get_suffix_comments(curr+1)
       _ ->
         ""
     end
@@ -129,7 +164,8 @@ defmodule ExFormat do
     case ast do
       {:__block__, _, _} -> true
       {_, ctx, _} -> ctx != [] and ctx[:line] > ctx[:prev]
-      _ -> false
+      # TODO: add more 'true' cases
+      _ -> true
     end
   end
 
@@ -314,6 +350,22 @@ defmodule ExFormat do
     fun.(ast, to_string(left, fun) <> to_string([right], fun))
   end
 
+  @doc_keywords [:doc, :moduledoc]
+
+  # Heredocs
+  def to_string({doc, _, [docstring]}, fun) when doc in @doc_keywords do
+    doc = Atom.to_string(doc)
+    if is_atom(docstring) do
+      doc <> " " <> to_string(docstring)
+    else
+      if sigil = doc_sigil_call(docstring, fun) do
+        doc <> " " <> sigil
+      else
+        doc <> " \"\"\"\n" <> docstring <> "\"\"\""
+      end
+    end
+  end
+
   # All other calls
   def to_string({target, _, args} = ast, fun) when is_list(args) do
     if sigil = sigil_call(ast, fun) do
@@ -347,7 +399,9 @@ defmodule ExFormat do
   end
 
   # All other structures
-  def to_string(other, fun), do: fun.(other, inspect(other, []))
+  def to_string(other, fun) do
+    fun.(other, inspect(other, []))
+  end
 
   defp bitpart_to_string({:::, _, [left, right]} = ast, fun) do
     result =
@@ -410,7 +464,22 @@ defmodule ExFormat do
   defp module_to_string(atom, _fun) when is_atom(atom), do: inspect(atom, [])
   defp module_to_string(other, fun), do: call_to_string(other, fun)
 
-  defp sigil_call({func, _, [{:<<>>, _, _} = bin, args]} = ast, fun) when is_atom(func) and is_list(args) do
+  defp doc_sigil_call({func, _, [{:<<>>, _, [docstring]}, args]}, fun) do
+    case Atom.to_string(func) do
+      <<"sigil_", name>> ->
+        "~" <> <<name>> <>
+        "\"\"\"\n" <>
+        docstring <>
+        "\"\"\"" <>
+        sigil_args(args, fun)
+      _ ->
+        nil
+    end
+  end
+  defp doc_sigil_call(_other, _fun), do: nil
+
+  defp sigil_call({func, _, [{:<<>>, _, _} = bin, args]} = ast, fun)
+       when is_atom(func) and is_list(args) do
     sigil =
       case Atom.to_string(func) do
         <<"sigil_", name>> ->
@@ -445,8 +514,9 @@ defmodule ExFormat do
     do: to_string(other, fun)
 
 
+  @parenless_calls [:def, :defp, :defmacro, :defmacrop, :defmodule, :if, :quote, :else]
   defp call_to_string_with_args(target, args, fun) do
-    need_parens = not target in [:def, :defp, :defmacro, :if, :quote, :else]
+    need_parens = not target in @parenless_calls
     target = call_to_string(target, fun)
     args = args_to_string(args, fun)
     if need_parens do
