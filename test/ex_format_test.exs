@@ -28,4 +28,8 @@ defmodule ExFormatTest do
   test "special indentation for guard clauses" do
   	assert_formatted_content("guard_clauses")
   end
+
+  test "preservation of doc comments" do
+    assert_formatted_content("doc_comments")
+  end
 end
