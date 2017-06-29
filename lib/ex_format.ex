@@ -44,6 +44,11 @@ defmodule ExFormat do
     end
   end
 
+  # TODO:
+  # 1. make wrapped literals work with all test cases so far
+  # 2. make it work with comments before/after literals
+  # 3. create inverted map of comment tokens from tokenizer
+  # 4. work on inline comments
   def process(file_name) do
     file_content = File.read!(file_name)
     lines = String.split(file_content, "\n")
@@ -59,16 +64,16 @@ defmodule ExFormat do
       end
     end
     # TODO: use a lexer to retrieve comments from file_content to handle inline comments
-    {_, ast} = Code.string_to_quoted(file_content)
+    {_, ast} = Code.string_to_quoted(file_content, wrap_literals_in_blocks: true)
     ast = preprocess(ast)
     # TODO: display remaining comments if any, after last accessed line
-    # IO.inspect ast
+    IO.inspect ast
     # IO.puts "\n"
     formatted = to_string(ast, fn ast, string ->
       case is_tuple(ast) and tuple_size(ast) == 3 do
         true ->
           {_, ctx, _} = ast
-          Enum.join [ctx[:prefix_comments], ctx[:prefix_newline], string]
+          Enum.join [ctx[:prefix_comments], ctx[:prefix_newline], string, ctx[:suffix_comments]]
         false -> string
       end
     end)
@@ -95,25 +100,27 @@ defmodule ExFormat do
     # how to collect dangling suffix comments
     # 1. collect all prefix comments first during prewalk
     # 2. do postwalk and collect suffix comments
-    Macro.postwalk(ast, fn ast ->
-      # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
-      case is_tuple(ast) and tuple_size(ast) == 3 do
-        true ->
-          {sym, curr_ctx, args} = ast
-          if curr_ctx != [] do
-            new_ctx = update_context(curr_ctx)
-            {sym, new_ctx, args}
-          else
-            ast
-          end
-        false ->
-          ast
-      end
-    end)
+    # Macro.postwalk(ast, fn ast ->
+    #   # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
+    #   case is_tuple(ast) and tuple_size(ast) == 3 do
+    #     true ->
+    #       {sym, curr_ctx, args} = ast
+    #       if curr_ctx != [] do
+    #         new_ctx = update_context(curr_ctx)
+    #         {sym, new_ctx, args}
+    #       else
+    #         ast
+    #       end
+    #     false ->
+    #       ast
+    #   end
+    # end)
+    ast
   end
+  # TODO: rename to update_meta
   defp update_context(curr_ctx) do
     curr_lineno = curr_ctx[:line]
-
+    # TODO: is suffix_newline necessary?
     [{:suffix_comments, get_suffix_comments(curr_lineno+1)}] ++ curr_ctx
   end
   defp update_context(curr_ctx, prev_ctx) do
@@ -159,7 +166,7 @@ defmodule ExFormat do
         ""
     end
   end
-  
+
   defp multiline?(ast) do
     case ast do
       {:__block__, _, _} -> true
@@ -577,6 +584,11 @@ defmodule ExFormat do
       left = comma_join_or_empty_paren(left, fun, false)
       left <> "->\n  " <> adjust_new_lines block_to_string(right, fun), "\n  "
     end)
+  end
+
+  defp block_to_string({:__block__, meta, [expr]}, fun) do
+    ast = {:__block__, update_context(meta), [expr]}
+    fun.(ast, to_string(expr, fun))
   end
 
   defp block_to_string({:__block__, _, exprs}, fun) do
