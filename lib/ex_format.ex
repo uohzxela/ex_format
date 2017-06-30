@@ -362,6 +362,13 @@ defmodule ExFormat do
   # Heredocs
   def to_string({doc, _, [docstring]}, fun) when doc in @doc_keywords do
     doc = Atom.to_string(doc)
+
+    # unwrap literal in block
+    docstring = case docstring do
+      {:__block__, _, [docstring]} -> docstring
+      _ -> docstring
+    end
+
     if is_atom(docstring) do
       doc <> " " <> to_string(docstring)
     else
