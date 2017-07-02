@@ -36,4 +36,8 @@ defmodule ExFormatTest do
   test "preservation of suffix comments" do
     assert_formatted_content("suffix_comments")
   end
+
+  test "preservation of inline comments" do
+    assert_formatted_content("inline_comments")
+  end
 end
