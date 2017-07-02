@@ -70,11 +70,13 @@ defmodule ExFormat do
     IO.inspect ast
     # IO.puts "\n"
     formatted = to_string(ast, fn ast, string ->
-      case is_tuple(ast) and tuple_size(ast) == 3 do
-        true ->
-          {_, ctx, _} = ast
+      case ast do
+        # {:__block__, ctx, [nil]} ->
+        #   String.trim ctx[:suffix_comments]
+        {_, ctx, _} ->
           Enum.join [ctx[:prefix_comments], ctx[:prefix_newline], string, ctx[:suffix_comments]]
-        false -> string
+        _ ->
+          string
       end
     end)
     IO.puts formatted
@@ -84,16 +86,17 @@ defmodule ExFormat do
   defp preprocess(ast) do
     {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
       # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
-      case is_tuple(ast) and tuple_size(ast) == 3 do
-        true ->
-          {sym, curr_ctx, args} = ast
+      case ast do
+        {:__block__, _, [nil]} ->
+          {ast, prev_ctx}
+        {sym, curr_ctx, args} ->
           if curr_ctx != [] and prev_ctx != [] do
             new_ctx = update_context(curr_ctx, prev_ctx)
             {{sym, new_ctx, args}, new_ctx}
           else
             {ast, prev_ctx}
           end
-        false ->
+        _ ->
           {ast, prev_ctx}
       end
     end)
@@ -169,6 +172,7 @@ defmodule ExFormat do
 
   defp multiline?(ast) do
     case ast do
+      # {:__block__, _, [_expr]} -> false
       {:__block__, _, _} -> true
       {_, ctx, _} -> ctx != [] and ctx[:line] > ctx[:prev]
       # TODO: add more 'true' cases
@@ -556,6 +560,18 @@ defmodule ExFormat do
       Enum.map_join(args, ", ", &to_string(&1, fun))
     end
   end
+
+  # defp get_last_lineno(ast) do 
+  #   case ast do
+  #     {:__block__, meta, [expr]} ->
+  #       meta[:line]
+  #     {:__block__, _, exprs} ->
+  #       last = Enum.take(exprs, -1)
+  #       get_last_lineno(last)
+  #     {_, meta, _} ->
+  #       meta[:line]
+  #   end
+  # end
 
   defp kw_blocks_to_string(kw, fun, args) do
     {s, multiline?} = Enum.reduce(@kw_keywords, {"", false}, fn(x, acc) ->
