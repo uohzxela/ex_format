@@ -174,15 +174,13 @@ defmodule ExFormat do
   defp get_inline_comments(k) do
     vals = Agent.get(:inline_comments, fn map -> Map.get(map, k) end)
     v = case vals do
-      nil -> nil
-      [] -> nil
+      nil ->
+        ""
+      [] ->
+        ""
       [v | rest] ->
         Agent.update(:inline_comments, fn map -> Map.put(map, k, rest) end)
-        v
-    end
-    case v do
-      nil -> ""
-      _ -> " " <> String.Chars.to_string(v)
+        " " <> String.Chars.to_string(v)
     end
   end
 
@@ -607,18 +605,6 @@ defmodule ExFormat do
       Enum.map_join(args, ", ", &to_string(&1, fun))
     end
   end
-
-  # defp get_last_lineno(ast) do
-  #   case ast do
-  #     {:__block__, meta, [expr]} ->
-  #       meta[:line]
-  #     {:__block__, _, exprs} ->
-  #       last = Enum.take(exprs, -1)
-  #       get_last_lineno(last)
-  #     {_, meta, _} ->
-  #       meta[:line]
-  #   end
-  # end
 
   defp kw_blocks_to_string(kw, fun, args) do
     {s, multiline?} = Enum.reduce(@kw_keywords, {"", false}, fn(x, acc) ->
