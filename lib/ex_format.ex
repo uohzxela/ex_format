@@ -44,43 +44,27 @@ defmodule ExFormat do
     end
   end
 
-  # TODO:
-  # 1. make wrapped literals work with all test cases so far
-  # 2. make it work with comments before/after literals
-  # 3. create inverted map of comment tokens from tokenizer
-  # 4. work on inline comments
   def process(file_name) do
     file_content = File.read!(file_name)
     lines = String.split(file_content, "\n")
-    {_, _, _, tokens} = :elixir_tokenizer.tokenize(to_charlist(file_content), 1, preserve_comments: true)
+
     Agent.start_link(fn -> %{} end, name: :lines)
     Agent.start_link(fn -> %{} end, name: :inline_comments)
-    Agent.start_link(fn -> %{} end, name: :line_fingerprints)
-    for {token, i} <- Enum.with_index(tokens) do
-      if elem(token, 0) == :comment do
-        prev = Enum.at(tokens, i-1)
-        prev_lineno = get_lineno(prev)
-        curr_lineno = get_lineno(token)
-        if prev_lineno == curr_lineno do
-          {:comment, _, comment} = token
-          update_inline_comments(curr_lineno, comment)
-        end
+    for {line, i} <- Enum.with_index(lines) do
+      update_line(i+1, String.trim(line))
+      inline_comment_token = extract_inline_comment_token(line)
+
+      if inline_comment_token do
+        {_, {_, start_col, _}, inline_comment} = inline_comment_token
+        fingerprint = line
+        |> String.slice(0..start_col)
+        |> get_line_fingerprint
+        if fingerprint != "", do: update_inline_comments(fingerprint, inline_comment)
       end
     end
 
-    for {s, i} <- Enum.with_index(lines) do
-      update_line(i+1, String.trim(s))
-      # TODO: use more robust way to remove comment from line if any
-      s = List.first(String.split(s, "#"))
-
-      key = Enum.join String.split(s, ~r/\W+/)
-      val = get_inline_comments(i+1)
-
-      update_line_fingerprints(key, val)
-    end
-    # TODO: use a lexer to retrieve comments from file_content to handle inline comments
     {_, ast} = Code.string_to_quoted(file_content, wrap_literals_in_blocks: true)
-    ast = preprocess(ast)
+    {ast, _} = preprocess(ast)
     # TODO: display remaining comments if any, after last accessed line
     IO.inspect ast
     # IO.puts "\n"
@@ -98,11 +82,29 @@ defmodule ExFormat do
     formatted_lines = String.split(formatted, "\n")
     formatted = Enum.map_join(formatted_lines, "\n", fn line ->
       line = String.trim_trailing line
-      fingerprint = Enum.join String.split(line, ~r/\W+/)
-      line <> get_line_fingerprints(fingerprint)
+      fingerprint = get_line_fingerprint line
+      line <> get_inline_comments(fingerprint)
     end)
     IO.puts formatted
     formatted
+  end
+
+  defp extract_inline_comment_token(line) do
+    {_, _, _, tokens} = :elixir_tokenizer.tokenize(to_charlist(line), 0,
+      preserve_comments: true, check_terminators: false)
+    token = tokens
+    |> Stream.with_index
+    |> Stream.filter(fn {token, i} ->
+      elem(token, 0) == :comment and i > 0 and get_lineno(Enum.at(tokens, i-1)) == get_lineno(token)
+    end)
+    |> Enum.to_list
+    |> List.first
+    if token, do: elem(token, 0), else: token
+  end
+
+  defp get_line_fingerprint(line) do
+    # TODO: be less aggressive with removing non-word chars here
+    Enum.join String.split(line, ~r/\W+/)
   end
 
   defp get_lineno(nil), do: nil
@@ -112,7 +114,7 @@ defmodule ExFormat do
   end
 
   defp preprocess(ast) do
-    {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
+    Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
       # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
       case ast do
         {:__block__, _, [nil]} ->
@@ -128,26 +130,8 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
-    # how to collect dangling suffix comments
-    # 1. collect all prefix comments first during prewalk
-    # 2. do postwalk and collect suffix comments
-    # Macro.postwalk(ast, fn ast ->
-    #   # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
-    #   case is_tuple(ast) and tuple_size(ast) == 3 do
-    #     true ->
-    #       {sym, curr_ctx, args} = ast
-    #       if curr_ctx != [] do
-    #         new_ctx = update_context(curr_ctx)
-    #         {sym, new_ctx, args}
-    #       else
-    #         ast
-    #       end
-    #     false ->
-    #       ast
-    #   end
-    # end)
-    ast
   end
+
   # TODO: rename to update_meta
   defp update_context(curr_ctx) do
     curr_lineno = curr_ctx[:line]
@@ -167,11 +151,8 @@ defmodule ExFormat do
   defp update_line(k, v), do: Agent.update(:lines, fn map -> Map.put(map, k, v) end)
   defp clear_line(k), do: Agent.update(:lines, fn map -> Map.put(map, k, nil) end)
 
-  defp update_inline_comments(k, v), do: Agent.update(:inline_comments, fn map -> Map.put(map, k, v) end)
-  defp get_inline_comments(k), do: Agent.get(:inline_comments, fn map -> Map.get(map, k) end)
-
-  defp update_line_fingerprints(k, v) do
-    Agent.update(:line_fingerprints, fn map ->
+  defp update_inline_comments(k, v) do
+    Agent.update(:inline_comments, fn map ->
       if Map.has_key?(map, k) do
         val = Map.get(map, k)
         Map.put(map, k, val ++ [v])
@@ -180,16 +161,15 @@ defmodule ExFormat do
       end
     end)
   end
-  defp get_line_fingerprints(k) do
-    vals = Agent.get(:line_fingerprints, fn map -> Map.get(map, k) end)
+  defp get_inline_comments(k) do
+    vals = Agent.get(:inline_comments, fn map -> Map.get(map, k) end)
     v = case vals do
       nil -> nil
       [] -> nil
       [v | rest] ->
-        Agent.update(:line_fingerprints, fn map -> Map.put(map, k, rest) end)
+        Agent.update(:inline_comments, fn map -> Map.put(map, k, rest) end)
         v
     end
-
     case v do
       nil -> ""
       _ -> " " <> String.Chars.to_string(v)
@@ -618,7 +598,7 @@ defmodule ExFormat do
     end
   end
 
-  # defp get_last_lineno(ast) do 
+  # defp get_last_lineno(ast) do
   #   case ast do
   #     {:__block__, meta, [expr]} ->
   #       meta[:line]
