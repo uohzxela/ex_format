@@ -45,9 +45,29 @@ defmodule ExFormat do
   end
 
   def process(file_name) do
-    file_content = File.read!(file_name)
-    lines = String.split(file_content, "\n")
+    file_name
+    |> File.read!
+    |> prepare_data
+    |> preprocess
+    |> format
+    |> postprocess
+  end
 
+  defp format(ast) do
+    to_string(ast, fn ast, string ->
+      case ast do
+        # {:__block__, ctx, [nil]} ->
+        #   String.trim ctx[:suffix_comments]
+        {_, meta, _} ->
+          Enum.join [meta[:prefix_comments], meta[:prefix_newline], string, meta[:suffix_comments]]
+        _ ->
+          string
+      end
+    end)
+  end
+
+  defp prepare_data(file_content) do
+    lines = String.split(file_content, "\n")
     Agent.start_link(fn -> %{} end, name: :lines)
     Agent.start_link(fn -> %{} end, name: :inline_comments)
     for {line, i} <- Enum.with_index(lines) do
@@ -62,23 +82,11 @@ defmodule ExFormat do
         if fingerprint != "", do: update_inline_comments(fingerprint, inline_comment)
       end
     end
-
     {_, ast} = Code.string_to_quoted(file_content, wrap_literals_in_blocks: true)
-    {ast, _} = preprocess(ast)
-    # TODO: display remaining comments if any, after last accessed line
-    IO.inspect ast
-    # IO.puts "\n"
-    formatted = to_string(ast, fn ast, string ->
-      case ast do
-        # {:__block__, ctx, [nil]} ->
-        #   String.trim ctx[:suffix_comments]
-        {_, meta, _} ->
-          Enum.join [meta[:prefix_comments], meta[:prefix_newline], string, meta[:suffix_comments]]
-        _ ->
-          string
-      end
-    end)
+    ast
+  end
 
+  defp postprocess(formatted) do
     formatted_lines = String.split(formatted, "\n")
     formatted = Enum.map_join(formatted_lines, "\n", fn line ->
       line = String.trim_trailing line
@@ -114,7 +122,7 @@ defmodule ExFormat do
   end
 
   defp preprocess(ast) do
-    Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
+    {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
       # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
       case ast do
         {:__block__, _, [nil]} ->
@@ -130,6 +138,8 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
+    # IO.inspect ast
+    ast
   end
 
   # TODO: rename to update_meta
