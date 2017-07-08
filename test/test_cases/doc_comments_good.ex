@@ -121,4 +121,12 @@ defmodule EEx do
   def child_spec(arg) do
     %{id: Agent, start: {Agent, :start_link, [arg]}}
   end
+
+  @doc ~S'''
+  this is a heredoc sigil
+  this is a 'charlist'
+  '''
+  def some_method() do
+    some_call()
+  end
 end

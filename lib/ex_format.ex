@@ -421,7 +421,7 @@ defmodule ExFormat do
     if is_atom(docstring) do
       doc <> " " <> to_string(docstring)
     else
-      if sigil = doc_sigil_call(docstring, fun) do
+      if sigil = sigil_call(docstring, fun) do
         doc <> " " <> sigil
       else
         doc <> " \"\"\"\n" <> docstring <> "\"\"\""
@@ -524,30 +524,49 @@ defmodule ExFormat do
     <<?", parts::binary, ?">>
   end
 
+  defp sigil_terminator(?/), do: ?/
+  defp sigil_terminator(?|), do: ?|
+  defp sigil_terminator(?"), do: ?"
+  defp sigil_terminator(?'), do: ?'
+  defp sigil_terminator(?(), do: ?)
+  defp sigil_terminator(?[), do: ?]
+  defp sigil_terminator(?{), do: ?}
+  defp sigil_terminator(?<), do: ?>
+
+  defp interpolate_with_terminator({:<<>>, _, parts}, terminator, fun) do
+    parts = Enum.map_join(parts, "", fn
+      {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
+        "\#{" <> to_string(arg, fun) <> "}"
+      binary when is_binary(binary) ->
+        binary = escape_terminators(binary, terminator)
+    end)
+    case terminator do
+      [c] ->
+        <<c, parts::binary, sigil_terminator(c)>>
+      [c, c, c] ->
+        <<c, c, c, ?\n, parts::binary, c, c, c>>
+    end
+  end
+
+  defp escape_terminators(binary, terminator) do
+    c = List.first terminator
+    if length(terminator) == 1 do
+      String.replace(binary, <<c>>, <<?\\, c>>)
+    else
+      binary
+    end
+  end
+
   defp module_to_string(atom, _fun) when is_atom(atom), do: inspect(atom, [])
   defp module_to_string(other, fun), do: call_to_string(other, fun)
 
-  defp doc_sigil_call({func, _, [{:<<>>, _, [docstring]}, args]}, fun) do
-    case Atom.to_string(func) do
-      <<"sigil_", name>> ->
-        "~" <> <<name>> <>
-        "\"\"\"\n" <>
-        docstring <>
-        "\"\"\"" <>
-        sigil_args(args, fun)
-      _ ->
-        nil
-    end
-  end
-  defp doc_sigil_call(_other, _fun), do: nil
-
-  defp sigil_call({func, _, [{:<<>>, _, _} = bin, args]} = ast, fun)
+  defp sigil_call({func, meta, [{:<<>>, _, _} = bin, args]} = ast, fun)
        when is_atom(func) and is_list(args) do
     sigil =
       case Atom.to_string(func) do
         <<"sigil_", name>> ->
           "~" <> <<name>> <>
-          interpolate(bin, fun) <>
+          interpolate_with_terminator(bin, meta[:terminator], fun) <>
           sigil_args(args, fun)
         _ ->
           nil
