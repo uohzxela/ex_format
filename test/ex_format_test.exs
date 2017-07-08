@@ -6,7 +6,7 @@ defmodule ExFormatTest do
   	prefix = "test/test_cases/"
   	bad_file = prefix <> file_name <> "_bad.ex"
   	good_file = prefix <> file_name <> "_good.ex"
-	assert ExFormat.process(bad_file) == File.read!(good_file)
+    assert ExFormat.process(bad_file) == File.read!(good_file)
   end
 
   test "the truth" do
@@ -39,5 +39,9 @@ defmodule ExFormatTest do
 
   test "preservation of inline comments" do
     assert_formatted_content("inline_comments")
+  end
+
+  test "preservation of sigils" do
+    assert_formatted_content("sigils")
   end
 end
