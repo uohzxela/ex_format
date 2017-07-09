@@ -48,4 +48,8 @@ defmodule ExFormatTest do
   test "spaces in code" do
     assert_formatted_content("spaces_in_code")
   end
+
+  test "no spaces in code" do
+    assert_formatted_content("no_spaces_in_code")
+  end
 end
