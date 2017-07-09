@@ -53,6 +53,10 @@ defmodule ExFormatTest do
     assert_formatted_content("no_spaces_in_code")
   end
 
+  test "spaces around default arguments \\ definition" do
+    assert_formatted_content("default_arguments")
+  end
+
   test "no spaces around segment options defintion in bitstrings" do
     assert_formatted_content("bitstring_segment_options")
   end
