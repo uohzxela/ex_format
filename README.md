@@ -32,7 +32,7 @@ Once inside the shell, run `ExFormat.process("filename.ex")` to try it out.
 - [x] [default-arguments](https://github.com/lexmag/elixir-style-guide#default-arguments)
 - [x] [no-trailing-whitespaces](https://github.com/lexmag/elixir-style-guide#no-trailing-whitespaces)
 - [x] [newline-eof](https://github.com/lexmag/elixir-style-guide#newline-eof)
-- [ ] [bitstring-segment-options](https://github.com/lexmag/elixir-style-guide#bitstring-segment-options)
+- [x] [bitstring-segment-options](https://github.com/lexmag/elixir-style-guide#bitstring-segment-options)
 - [x] [guard-clauses](https://github.com/lexmag/elixir-style-guide#guard-clauses)
 - [ ] [multi-line-expr-assignment](https://github.com/lexmag/elixir-style-guide#multi-line-expr-assignment)
 - [ ] [underscores-in-numerics](https://github.com/lexmag/elixir-style-guide#underscores-in-numerics)

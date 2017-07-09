@@ -45,11 +45,15 @@ defmodule ExFormatTest do
     assert_formatted_content("sigils")
   end
 
-  test "spaces in code" do
+  test "spaces around binary operators, after commas, colons and semicolons" do
     assert_formatted_content("spaces_in_code")
   end
 
-  test "no spaces in code" do
+  test "no spaces after unary operators and inside range literals, the only exception is the not operator" do
     assert_formatted_content("no_spaces_in_code")
+  end
+
+  test "no spaces around segment options defintion in bitstrings" do
+    assert_formatted_content("bitstring_segment_options")
   end
 end
