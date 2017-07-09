@@ -27,7 +27,7 @@ Once inside the shell, run `ExFormat.process("filename.ex")` to try it out.
 
 - [x] [spaces-indentation](https://github.com/lexmag/elixir-style-guide#spaces-indentation)
 - [x] [no-semicolon](https://github.com/lexmag/elixir-style-guide#no-semicolon)
-- [ ] [spaces-in-code](https://github.com/lexmag/elixir-style-guide#spaces-in-code)
+- [x] [spaces-in-code](https://github.com/lexmag/elixir-style-guide#spaces-in-code)
 - [ ] [no-spaces-in-code](https://github.com/lexmag/elixir-style-guide#no-spaces-in-code)
 - [x] [default-arguments](https://github.com/lexmag/elixir-style-guide#default-arguments)
 - [x] [no-trailing-whitespaces](https://github.com/lexmag/elixir-style-guide#no-trailing-whitespaces)

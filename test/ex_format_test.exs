@@ -44,4 +44,8 @@ defmodule ExFormatTest do
   test "preservation of sigils" do
     assert_formatted_content("sigils")
   end
+
+  test "spaces in code" do
+    assert_formatted_content("spaces_in_code")
+  end
 end
