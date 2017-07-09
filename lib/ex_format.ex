@@ -94,7 +94,7 @@ defmodule ExFormat do
       line <> get_inline_comments(fingerprint)
     end)
     IO.puts formatted
-    formatted
+    formatted <> "\n"
   end
 
   defp extract_inline_comment_token(line) do
@@ -138,7 +138,7 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
-    # IO.inspect ast
+    IO.inspect ast
     ast
   end
 
