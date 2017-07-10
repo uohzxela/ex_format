@@ -41,7 +41,7 @@ defmodule ExFormatTest do
     assert_formatted_content("inline_comments")
   end
 
-  test "preservation of sigils" do
+  test "preservation of sigils and their terminators" do
     assert_formatted_content("sigils")
   end
 
@@ -59,5 +59,17 @@ defmodule ExFormatTest do
 
   test "no spaces around segment options defintion in bitstrings" do
     assert_formatted_content("bitstring_segment_options")
+  end
+
+  # test "use parentheses around def arguments, don't omit them even when a function has no arguments" do
+  #   assert_formatted_content("fun_parens")
+  # end
+
+  test "when using atom literals that need to be quoted because they contain characters that are invalid in atoms (such as :\"foo-bar\"), use double quotes around the atom name" do
+    assert_formatted_content("quotes_around_atoms")
+  end
+
+  test "avoid aligning expression groups" do
+    assert_formatted_content("expression_group_alignment")
   end
 end
