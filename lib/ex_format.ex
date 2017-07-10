@@ -138,7 +138,7 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
-    IO.inspect ast
+    # IO.inspect ast
     ast
   end
 
@@ -215,11 +215,19 @@ defmodule ExFormat do
     end
   end
 
+  defp has_suffix_comments(curr) do
+    case get_line(curr) do
+      "#" <> _ -> true
+      "" -> has_suffix_comments(curr+1)
+      _ -> false
+    end
+  end
+
   defp multiline?(ast) do
     case ast do
-      # {:__block__, _, [_expr]} -> false
+      {:__block__, meta, [expr]} -> meta != [] and has_suffix_comments(meta[:line]+1)
       {:__block__, _, _} -> true
-      {_, ctx, _} -> ctx != [] and ctx[:line] > ctx[:prev]
+      {_, meta, _} -> meta != [] and meta[:line] > meta[:prev]
       # TODO: add more 'true' cases
       _ -> true
     end
@@ -408,7 +416,7 @@ defmodule ExFormat do
 
   @doc_keywords [:doc, :moduledoc]
 
-  # Heredocs
+  # Doc comments
   def to_string({doc, _, [docstring]}, fun) when doc in @doc_keywords do
     doc = Atom.to_string(doc)
 
@@ -424,6 +432,7 @@ defmodule ExFormat do
       if sigil = sigil_call(docstring, fun) do
         doc <> " " <> sigil
       else
+        # TODO: is single quote heredoc necessary?
         doc <> " \"\"\"\n" <> docstring <> "\"\"\""
       end
     end
@@ -596,6 +605,14 @@ defmodule ExFormat do
   defp call_to_string(other, fun),
     do: to_string(other, fun)
 
+  defp call_to_string_with_args({:., _, [:erlang, :binary_to_atom]} = target, args, fun) do
+    args = args_to_string(args, fun)
+    |> String.split("\"")
+    |> Enum.drop(-1)
+    |> Enum.join()
+
+    <<?:, ?", args::binary, ?">>
+  end
 
   @parenless_calls [:def, :defp, :defmacro, :defmacrop, :defmodule, :if, :quote, :else]
   defp call_to_string_with_args(target, args, fun) do
