@@ -14,7 +14,7 @@ defmodule ExFormatTest do
   end
 
   test "preservation of keyword list syntax" do
-  	assert_formatted_content("kw_list")
+  	assert_formatted_content("kw_list_syntax")
   end
 
   test "preservation of prefix comments" do
@@ -71,5 +71,9 @@ defmodule ExFormatTest do
 
   test "avoid aligning expression groups" do
     assert_formatted_content("expression_group_alignment")
+  end
+
+  test "keyword lists line splitting" do
+    assert_formatted_content("kw_list")
   end
 end

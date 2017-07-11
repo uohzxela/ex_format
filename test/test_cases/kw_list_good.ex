@@ -1,26 +1,60 @@
-def func1(a1, b1) do
-  func3(a, b)
-  1 + 2
-end
-def func1(a1, b1) do
-  func3(a, b)
-end
-def func1(a1, b1) do
-  func3(a, b)
-end
-
-def func2(a2, b2), do: func3(a, b)
-def func2(a2, b2), do: func3(a, b)
-def func2(a2, b2), do: func3(a, b)
-
-quote do: 1 + 2
-quote do
-  1 + 2
-end
-
-if something, do: that_thing, else: nothing
-if something do
-  that_thing
-else
-  nothing
-end
+[
+  # comment1
+  # comment 2
+  # comment 3
+  key1: "val1",
+  key2: [
+    # comment 4
+    k: "hello",
+    k2: "something", # inline comment1
+    k4: [
+      inner: 'innerval',
+      inner2: [
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+        k: 'v',
+      ],
+    ],
+  ],
+  # comment5
+  key3: "val3",
+]
+[k1: 'v1', k2: 'v2', k3: 'v3', k4: 'v4', k5: 'v5']
+[
+  k1: 'v1',
+  k2: 'v2',
+  k3: 'v3',
+  k4: 'v4',
+  k5: 'v5',
+  k1: 'v1',
+  k2: 'v2',
+  k3: 'v3',
+  k4: 'v4',
+  k5: 'v5',
+  k1: 'v1',
+  k2: 'v2',
+  k3: 'v3',
+  k4: 'v4',
+  k5: 'v5',
+]
+[
+  k1: 'v1',
+  k2: 'v2',
+  k3: 'v3',
+  k4: 'v4',
+  k5: 'v5',
+]
