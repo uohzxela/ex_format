@@ -44,6 +44,8 @@ defmodule ExFormat do
     end
   end
 
+  @line_limit 120
+
   def process(file_name) do
     file_name
     |> File.read!
@@ -695,6 +697,8 @@ defmodule ExFormat do
     to_string(update_map, fun) <> " | " <> map_to_string(update_args, fun)
   end
 
+  def fits?(s), do: String.length(s) <= @line_limit
+
   defp map_to_string(list, fun) do
     cond do
       Inspect.List.keyword?(list) -> kw_list_to_string(list, fun)
@@ -703,13 +707,46 @@ defmodule ExFormat do
   end
 
   defp kw_list_to_string(list, fun) do
-    Enum.map_join(list, ", ", fn {key, value} ->
+    kw_list = Enum.map_join(list, ", ", fn {key, value} ->
       atom_name = case Inspect.Atom.inspect(key) do
         ":" <> rest -> rest
         other       -> other
       end
-      atom_name <> ": " <> to_string(value, fun)
+      atom_name <> ": " <> to_string(value, fn(_ast, string) -> string end)
     end)
+    has_line_breaks? = Enum.drop(list, 1) |> Enum.any?(fn {key, value} ->
+      case value do
+        {_, meta, _} -> meta[:prev] < meta[:line]
+        _ -> false
+      end
+    end)
+    if not fits?("[" <> kw_list <> "]") or has_line_breaks? do
+      kw_list_to_multiline_string(list, fun)
+    else
+      kw_list
+    end
+  end
+
+  defp kw_list_to_multiline_string(list, fun) do
+    kw_list = Enum.map_join(list, ",\n  ", fn {key, value} ->
+      atom_name = case Inspect.Atom.inspect(key) do
+        ":" <> rest -> rest
+        other       -> other
+      end
+      kw = atom_name <> ": " <> adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
+      case value do
+        {_, meta, _} ->
+          prefix_comments = meta[:prefix_comments]
+          if prefix_comments != nil and prefix_comments != "" do
+            adjust_new_lines(prefix_comments <> kw, "\n  ")
+          else
+            kw
+          end
+        _ ->
+          kw
+      end
+    end)
+    "\n  " <> kw_list <> ",\n"
   end
 
   defp map_list_to_string(list, fun) do

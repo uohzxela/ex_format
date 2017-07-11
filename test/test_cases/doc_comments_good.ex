@@ -119,7 +119,10 @@ defmodule EEx do
 
   @doc false
   def child_spec(arg) do
-    %{id: Agent, start: {Agent, :start_link, [arg]}}
+    %{
+      id: Agent,
+      start: {Agent, :start_link, [arg]},
+    }
   end
 
   @doc ~S'''
