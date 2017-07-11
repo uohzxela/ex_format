@@ -73,7 +73,11 @@ defmodule ExFormatTest do
     assert_formatted_content("expression_group_alignment")
   end
 
-  test "keyword lists line splitting" do
+  test "keyword list line splitting" do
     assert_formatted_content("kw_list")
+  end
+
+  test "list line splitting" do
+    assert_formatted_content("list")
   end
 end
