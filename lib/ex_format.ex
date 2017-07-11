@@ -140,7 +140,7 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
-    # IO.inspect ast
+    IO.inspect ast
     ast
   end
 
@@ -227,6 +227,7 @@ defmodule ExFormat do
 
   defp multiline?(ast) do
     case ast do
+      {_, _} -> String.length(to_string(ast)) > @line_limit/3
       {:__block__, meta, [expr]} -> meta != [] and has_suffix_comments(meta[:line]+1)
       {:__block__, _, _} -> true
       {_, meta, _} -> meta != [] and meta[:line] > meta[:prev]
@@ -460,6 +461,7 @@ defmodule ExFormat do
 
   # Lists
   def to_string(list, fun) when is_list(list) do
+    # TODO: preserve prefix newlines and comments
     fun.(list, cond do
       list == [] ->
         "[]"
@@ -469,7 +471,7 @@ defmodule ExFormat do
       Inspect.List.keyword?(list) ->
         "[" <> kw_list_to_string(list, fun) <> "]"
       true ->
-        "[" <> Enum.map_join(list, ", ", &to_string(&1, fun)) <> "]"
+        "[" <> list_to_string(list, fun) <> "]"
     end)
   end
 
@@ -616,7 +618,7 @@ defmodule ExFormat do
     <<?:, ?", args::binary, ?">>
   end
 
-  @parenless_calls [:def, :defp, :defmacro, :defmacrop, :defmodule, :if, :quote, :else]
+  @parenless_calls [:def, :defp, :defmacro, :defmacrop, :defmodule, :if, :quote, :else, :cond, :with, :for]
   defp call_to_string_with_args(target, args, fun) do
     need_parens = not target in @parenless_calls
     target = call_to_string(target, fun)
@@ -699,6 +701,34 @@ defmodule ExFormat do
 
   def fits?(s), do: String.length(s) <= @line_limit
 
+  defp line_breaks?(list) when is_list(list) do
+    Enum.drop(list, 1) |> Enum.any?(fn elem ->
+      value = case elem do
+        {_, v} -> v
+        v -> v
+      end
+      case value do
+        {_, meta, _} -> meta[:prev] < meta[:line]
+        _ -> false
+      end
+    end)
+  end
+  defp line_breaks?(_), do: false
+
+  defp prefix_comments_to_elem(elem_ast, elem_string) do
+    case elem_ast do
+      {_, meta, _} ->
+        prefix_comments = meta[:prefix_comments]
+        if prefix_comments != nil and prefix_comments != "" do
+          adjust_new_lines(prefix_comments <> elem_string, "\n  ")
+        else
+          elem_string
+        end
+      _ ->
+        elem_string
+    end
+  end
+
   defp map_to_string(list, fun) do
     cond do
       Inspect.List.keyword?(list) -> kw_list_to_string(list, fun)
@@ -706,24 +736,35 @@ defmodule ExFormat do
     end
   end
 
+  defp list_to_string(list, fun) do
+    list_string = Enum.map_join(list, ", ", &to_string(&1, fun))
+    if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
+      list_to_multiline_string(list, fun)
+    else
+      list_string
+    end
+  end
+
+  defp list_to_multiline_string(list, fun) do
+    list_string = Enum.map_join(list, ",\n  ", fn value ->
+      elem = adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
+      prefix_comments_to_elem(value, elem)
+    end)
+    "\n  " <> list_string <> ",\n"
+  end
+
   defp kw_list_to_string(list, fun) do
-    kw_list = Enum.map_join(list, ", ", fn {key, value} ->
+    list_string = Enum.map_join(list, ", ", fn {key, value} ->
       atom_name = case Inspect.Atom.inspect(key) do
         ":" <> rest -> rest
         other       -> other
       end
       atom_name <> ": " <> to_string(value, fn(_ast, string) -> string end)
     end)
-    has_line_breaks? = Enum.drop(list, 1) |> Enum.any?(fn {key, value} ->
-      case value do
-        {_, meta, _} -> meta[:prev] < meta[:line]
-        _ -> false
-      end
-    end)
-    if not fits?("[" <> kw_list <> "]") or has_line_breaks? do
+    if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
       kw_list_to_multiline_string(list, fun)
     else
-      kw_list
+      list_string
     end
   end
 
@@ -734,17 +775,7 @@ defmodule ExFormat do
         other       -> other
       end
       kw = atom_name <> ": " <> adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
-      case value do
-        {_, meta, _} ->
-          prefix_comments = meta[:prefix_comments]
-          if prefix_comments != nil and prefix_comments != "" do
-            adjust_new_lines(prefix_comments <> kw, "\n  ")
-          else
-            kw
-          end
-        _ ->
-          kw
-      end
+      prefix_comments_to_elem(value, kw)
     end)
     "\n  " <> kw_list <> ",\n"
   end
