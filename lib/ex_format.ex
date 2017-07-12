@@ -618,7 +618,20 @@ defmodule ExFormat do
     <<?:, ?", args::binary, ?">>
   end
 
-  @parenless_calls [:def, :defp, :defmacro, :defmacrop, :defmodule, :if, :quote, :else, :cond, :with, :for]
+  @parenless_calls([
+    :def,
+    :defp,
+    :defmacro,
+    :defmacrop,
+    :defmodule,
+    :defstruct,
+    :if,
+    :quote,
+    :else,
+    :cond,
+    :with,
+    :for,
+  ])
   defp call_to_string_with_args(target, args, fun) do
     need_parens = not target in @parenless_calls
     target = call_to_string(target, fun)
@@ -704,7 +717,8 @@ defmodule ExFormat do
   defp line_breaks?(list) when is_list(list) do
     Enum.drop(list, 1) |> Enum.any?(fn elem ->
       value = case elem do
-        {_, v} -> v
+        {k, v} when is_atom(k) -> v
+        {k, _} -> k
         v -> v
       end
       case value do
@@ -769,21 +783,35 @@ defmodule ExFormat do
   end
 
   defp kw_list_to_multiline_string(list, fun) do
-    kw_list = Enum.map_join(list, ",\n  ", fn {key, value} ->
+    list_string = Enum.map_join(list, ",\n  ", fn {key, value} ->
       atom_name = case Inspect.Atom.inspect(key) do
         ":" <> rest -> rest
         other       -> other
       end
-      kw = atom_name <> ": " <> adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
+      kw = atom_name <> ": " <>adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
       prefix_comments_to_elem(value, kw)
     end)
-    "\n  " <> kw_list <> ",\n"
+    "\n  " <> list_string <> ",\n"
   end
 
   defp map_list_to_string(list, fun) do
-    Enum.map_join(list, ", ", fn {key, value} ->
+    list_string = Enum.map_join(list, ", ", fn {key, value} ->
       to_string(key, fun) <> " => " <> to_string(value, fun)
     end)
+    if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
+      map_list_to_multiline_string(list, fun)
+    else
+      list_string
+    end
+  end
+
+  defp map_list_to_multiline_string(list, fun) do
+    list_string = Enum.map_join(list, ",\n  ", fn {key, value} ->
+      elem = to_string(key, fn(_ast, string) -> string end) <> " => " <>
+        adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
+      prefix_comments_to_elem(key, elem)
+    end)
+    "\n  " <> list_string <> ",\n"
   end
 
   defp parenthise(expr, fun) do
