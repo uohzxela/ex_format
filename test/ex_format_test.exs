@@ -80,4 +80,8 @@ defmodule ExFormatTest do
   test "list line splitting" do
     assert_formatted_content("list")
   end
+
+  test "map list line splitting" do
+    assert_formatted_content("map_list")
+  end
 end
