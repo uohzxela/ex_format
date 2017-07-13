@@ -1,3 +1,4 @@
+# comment before list is preserved
 [1,2,3,4,5,3,5,6,7,8]
 
 [1,
@@ -7,6 +8,8 @@
 4,5,3,5,
 6,7,8]
 
+# more comments
+# multiline comments
 [1,
 [2,3,4,
 5,6,3],5,6,
@@ -24,10 +27,11 @@
 ]
 
 defp deps do
-  [# Web server
-   {:cowboy, "~> 1.0", "asdf"},
+  [
+    # Web server
+   {:cowboy, "~> 1.0"},
    # Web framework
-   {:phoenix, "~> 1.3.0-rc", "asdf"},
+   {:phoenix, "~> 1.3.0-rc"},
    # XML parser helper
    {:sweet_xml, "~> 0.6"},
    # Statsd metrics sink client
