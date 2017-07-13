@@ -140,7 +140,7 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
-    IO.inspect ast
+    # IO.inspect ast
     ast
   end
 
@@ -227,12 +227,15 @@ defmodule ExFormat do
 
   defp multiline?(ast) do
     case ast do
-      {_, _} -> String.length(to_string(ast)) > @line_limit/3
-      {:__block__, meta, [expr]} -> meta != [] and has_suffix_comments(meta[:line]+1)
-      {:__block__, _, _} -> true
-      {_, meta, _} -> meta != [] and meta[:line] > meta[:prev]
+      {:__block__, meta, [expr]} ->
+        format(ast) =~ "\n" or (meta != [] and has_suffix_comments(meta[:line]+1))
+      {:__block__, _, _} ->
+        true
+      {_, meta, _} ->
+        meta != [] and meta[:line] > meta[:prev]
       # TODO: add more 'true' cases
-      _ -> true
+      _ ->
+        true
     end
   end
 
@@ -631,6 +634,7 @@ defmodule ExFormat do
     :cond,
     :with,
     :for,
+    :use
   ])
   defp call_to_string_with_args(target, args, fun) do
     need_parens = not target in @parenless_calls
