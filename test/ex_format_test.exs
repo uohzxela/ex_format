@@ -88,4 +88,8 @@ defmodule ExFormatTest do
   test "tuples line splitting" do
     assert_formatted_content("tuples")
   end
+
+  test "pipeline indentations" do
+    assert_formatted_content("pipeline_indentations")
+  end
 end
