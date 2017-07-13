@@ -302,7 +302,7 @@ defmodule ExFormat do
 
   # Tuple containers
   def to_string({:{}, _, args} = ast, fun) do
-    tuple = "{" <> Enum.map_join(args, ", ", &to_string(&1, fun)) <> "}"
+    tuple = "{" <> tuple_to_string(args, fun) <> "}"
     fun.(ast, tuple)
   end
 
@@ -812,6 +812,23 @@ defmodule ExFormat do
       prefix_comments_to_elem(key, elem)
     end)
     "\n  " <> list_string <> ",\n"
+  end
+
+  defp tuple_to_string(tuple, fun) do
+    tuple_string = Enum.map_join(tuple, ", ", &to_string(&1, fun))
+    if not fits?("  " <> tuple_string <> "  ") or line_breaks?(tuple) do
+      tuple_to_multiline_string(tuple, fun)
+    else
+      tuple_string
+    end
+  end
+
+  defp tuple_to_multiline_string(tuple, fun) do
+    tuple_string = Enum.map_join(tuple, ",\n  ", fn value ->
+      elem = adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
+      prefix_comments_to_elem(value, elem)
+    end)
+    "\n  " <> tuple_string <> ",\n"
   end
 
   defp parenthise(expr, fun) do
