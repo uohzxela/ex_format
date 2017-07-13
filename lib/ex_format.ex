@@ -247,6 +247,14 @@ defmodule ExFormat do
     |> List.first
   end
 
+  defp get_meta({_, meta, _} = ast) do
+    case Keyword.keyword?(meta) do
+      true -> meta
+      false -> []
+    end
+  end
+  defp get_meta(_), do: []
+
   @doc """
   Converts the given expression to a binary.
   The given `fun` is called for every node in the AST with two arguments: the
@@ -367,6 +375,18 @@ defmodule ExFormat do
     # IO.puts op_to_string(left, fun, :when, :left)
     # IO.puts right
     op_to_string(left, fun, :when, :left) <> newline <> fun.(ast, "#{padding}when " <> right)
+  end
+
+  # Pipeline op
+  def to_string({:|>, _, [left, right]} = ast, fun) do
+    {left_meta, right_meta} ={get_meta(left), get_meta(right)}
+    op = :|>
+    pipeline_op = cond do
+      left_meta == [] or right_meta == [] -> " #{op} "
+      left_meta[:line] != right_meta[:line] -> "\n#{op} "
+      true -> " #{op} "
+    end
+    fun.(ast, op_to_string(left, fun, :|>, :left) <> pipeline_op <> op_to_string(right, fun, :|>, :right))
   end
 
   # Binary ops
