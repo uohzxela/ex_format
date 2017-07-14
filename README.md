@@ -21,7 +21,7 @@ Once inside the shell, run `ExFormat.process("filename.ex")` to try it out.
   * Suffix comments
   * Inline comments
   * Doc comments
-- Preserve line breaks and collapse contiguous line breaks into a single one
+- Preserve line breaks and collapse contiguous line breaks into a single one so you can separate unrelated functions or group related ones together
 - Preserve intended keyword list syntax (e.g., `do: something`)
 - Preserve sigils along with their intended terminators
 - Preserve intended line breaks for various syntactic constructs (e.g., `|>` or `<>` operator)
