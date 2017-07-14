@@ -5,6 +5,7 @@
 |> 3
 |> 4
 
+input |> Some.verylongcall() |> Again.verylonglongcall() |> AgainAgain.verylonglongcall() |> AgainAgainAgain.verylonglongcall
 
 input |> String.strip() |> String.downcase()
 String.strip(input) |>

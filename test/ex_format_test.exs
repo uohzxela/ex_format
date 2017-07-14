@@ -65,7 +65,7 @@ defmodule ExFormatTest do
   #   assert_formatted_content("fun_parens")
   # end
 
-  test "when using atom literals that need to be quoted because they contain characters that are invalid in atoms (such as :\"foo-bar\"), use double quotes around the atom name" do
+  test "when using atom literals that need to be quoted, use double quotes around the atom name" do
     assert_formatted_content("quotes_around_atoms")
   end
 
@@ -91,5 +91,9 @@ defmodule ExFormatTest do
 
   test "pipeline indentations" do
     assert_formatted_content("pipeline_indentations")
+  end
+
+  test "binary concat indentations" do
+    assert_formatted_content("binary_concat_indentations")
   end
 end

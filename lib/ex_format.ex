@@ -44,7 +44,7 @@ defmodule ExFormat do
     end
   end
 
-  @line_limit 120
+  @split_threshold 80
 
   def process(file_name) do
     file_name
@@ -377,16 +377,34 @@ defmodule ExFormat do
     op_to_string(left, fun, :when, :left) <> newline <> fun.(ast, "#{padding}when " <> right)
   end
 
-  # Pipeline op
-  def to_string({:|>, _, [left, right]} = ast, fun) do
+  # Binary concat op
+  def to_string({:<> = op, _, [left, right]} = ast, fun) do
     {left_meta, right_meta} ={get_meta(left), get_meta(right)}
-    op = :|>
+    {left_string, right_string} = {op_to_string(left, fun, op, :left), op_to_string(right, fun, op, :right)}
+    string = fun.(ast, left_string <> " #{op} " <> right_string)
+
+    bin_concat_op = cond do
+      left_meta == [] or right_meta == [] -> " #{op} "
+      left_meta[:line] != right_meta[:line] -> " #{op}\n"
+      not fits?(string) -> " #{op}\n"
+      true -> " #{op} "
+    end
+    fun.(ast, left_string <> bin_concat_op <> right_string)
+  end
+
+  # Pipeline op
+  def to_string({:|> = op, _, [left, right]} = ast, fun) do
+    {left_meta, right_meta} ={get_meta(left), get_meta(right)}
+    {left_string, right_string} = {op_to_string(left, fun, op, :left), op_to_string(right, fun, op, :right)}
+    string = fun.(ast, left_string <> " #{op} " <> right_string)
+
     pipeline_op = cond do
       left_meta == [] or right_meta == [] -> " #{op} "
       left_meta[:line] != right_meta[:line] -> "\n#{op} "
+      not fits?(string) -> "\n#{op} "
       true -> " #{op} "
     end
-    fun.(ast, op_to_string(left, fun, :|>, :left) <> pipeline_op <> op_to_string(right, fun, :|>, :right))
+    fun.(ast, left_string <> pipeline_op <> right_string)
   end
 
   # Binary ops
@@ -736,7 +754,7 @@ defmodule ExFormat do
     to_string(update_map, fun) <> " | " <> map_to_string(update_args, fun)
   end
 
-  def fits?(s), do: String.length(s) <= @line_limit
+  def fits?(s), do: String.length(s) <= @split_threshold
 
   defp line_breaks?(list) when is_list(list) do
     Enum.drop(list, 1) |> Enum.any?(fn elem ->
