@@ -96,4 +96,8 @@ defmodule ExFormatTest do
   test "binary concat indentations" do
     assert_formatted_content("binary_concat_indentations")
   end
+
+  test "anonymous function indentations" do
+    assert_formatted_content("anon_funs_indentations")
+  end
 end

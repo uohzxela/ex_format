@@ -140,7 +140,6 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
-    # IO.inspect ast
     ast
   end
 
@@ -255,6 +254,19 @@ defmodule ExFormat do
   end
   defp get_meta(_), do: []
 
+  defp on_same_line?(args, tuple)
+       when is_list(args) and is_tuple(tuple) do
+    arg = List.first args
+    {arg_meta, tuple_meta} = {get_meta(arg), get_meta(tuple)}
+    cond do
+      arg_meta != [] and tuple_meta != [] ->
+        arg_meta[:line] == tuple_meta[:line]
+      true ->
+        tuple_string = format(tuple)
+        not (tuple_string =~ "\n") and fits?(tuple_string)
+    end
+  end
+
   @doc """
   Converts the given expression to a binary.
   The given `fun` is called for every node in the AST with two arguments: the
@@ -330,13 +342,11 @@ defmodule ExFormat do
   end
 
   # Fn keyword
-  def to_string({:fn, _, [{:->, _, [_, tuple]}] = arrow} = ast, fun)
-      when not is_tuple(tuple) or elem(tuple, 0) != :__block__ do
-    fun.(ast, "fn " <> arrow_to_string(arrow, fun) <> " end")
-  end
-
-  def to_string({:fn, _, [{:->, _, _}] = block} = ast, fun) do
-    fun.(ast, "fn " <> block_to_string(block, fun) <> "\nend")
+  def to_string({:fn, _, [{:->, _, [args, tuple]}] = arrow} = ast, fun) do
+    case not is_tuple(tuple) or (on_same_line?(args, tuple)) do
+      true -> fun.(ast, "fn " <> arrow_to_string(arrow, fun) <> " end")
+      false -> fun.(ast, "fn " <> block_to_string(arrow, fun) <> "\nend")
+    end
   end
 
   def to_string({:fn, _, block} = ast, fun) do
