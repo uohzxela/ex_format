@@ -1,4 +1,5 @@
 import Kernel, except: [to_string: 1]
+import Inspect.Algebra
 
 defmodule ExFormat do
   @typedoc "Abstract Syntax Tree (AST)"
@@ -682,7 +683,11 @@ defmodule ExFormat do
     :cond,
     :with,
     :for,
-    :use
+    :use,
+    :case,
+    :import,
+    :not,
+    :alias
   ])
   defp call_to_string_with_args(target, args, fun) do
     need_parens = not target in @parenless_calls
@@ -786,7 +791,8 @@ defmodule ExFormat do
       {_, meta, _} ->
         prefix_comments = meta[:prefix_comments]
         if prefix_comments != nil and prefix_comments != "" do
-          adjust_new_lines(prefix_comments <> elem_string, "\n  ")
+          # adjust_new_lines(prefix_comments <> elem_string, "\n  ")
+          prefix_comments <> elem_string
         else
           elem_string
         end
@@ -812,11 +818,24 @@ defmodule ExFormat do
   end
 
   defp list_to_multiline_string(list, fun) do
-    list_string = Enum.map_join(list, ",\n  ", fn value ->
-      elem = adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
-      prefix_comments_to_elem(value, elem)
+    list = Enum.map(list, fn value ->
+      elem = to_string(value, fn(_ast, string) -> string end)
+      elem = prefix_comments_to_elem(value, elem)
+      if elem =~ "\n" do
+        "\n" <> elem <> ",\n"
+      else
+        [elem <> ",", break]
+      end
     end)
-    "\n  " <> list_string <> ",\n"
+    formatted_list = List.flatten(list)
+    |> concat
+    |> format(40)
+    |> Enum.join
+    |> String.replace("\n\n", "\n")
+    |> adjust_new_lines("\n  ")
+    |> String.trim
+    
+    "\n  " <> formatted_list <> "\n"
   end
 
   defp kw_list_to_string(list, fun) do
