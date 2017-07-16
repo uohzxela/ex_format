@@ -710,7 +710,7 @@ defmodule ExFormat do
           [] -> ""
           _  -> Enum.map_join(list, ", ", &to_string(&1, fun)) <> ", "
         end
-      prefix <> kw_list_to_string(last, fun)
+      prefix <> String.replace_suffix(kw_list_to_string(last, fun), ",\n", "")
     else
       Enum.map_join(args, ", ", &to_string(&1, fun))
     end

@@ -49,3 +49,7 @@ defmodule Mssqlex.Mixfile do
   end
 
 end
+
+for app <- apps, 
+    do: {app, path},
+    into: %{}
