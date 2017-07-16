@@ -387,19 +387,19 @@ defmodule ExFormat do
     op_to_string(left, fun, :when, :left) <> newline <> fun.(ast, "#{padding}when " <> right)
   end
 
-  # Binary concat op
-  def to_string({:<> = op, _, [left, right]} = ast, fun) do
+  # Multiline-able binary ops
+  def to_string({op, _, [left, right]} = ast, fun) when op in [:<>, :++] do
     {left_meta, right_meta} ={get_meta(left), get_meta(right)}
     {left_string, right_string} = {op_to_string(left, fun, op, :left), op_to_string(right, fun, op, :right)}
     string = fun.(ast, left_string <> " #{op} " <> right_string)
 
-    bin_concat_op = cond do
+    bin_op = cond do
       left_meta == [] or right_meta == [] -> " #{op} "
       left_meta[:line] != right_meta[:line] -> " #{op}\n"
       not fits?(string) -> " #{op}\n"
       true -> " #{op} "
     end
-    fun.(ast, left_string <> bin_concat_op <> right_string)
+    fun.(ast, left_string <> bin_op <> right_string)
   end
 
   # Pipeline op

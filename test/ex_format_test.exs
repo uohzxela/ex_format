@@ -93,8 +93,8 @@ defmodule ExFormatTest do
     assert_formatted_content("pipeline_indentations")
   end
 
-  test "binary concat indentations" do
-    assert_formatted_content("binary_concat_indentations")
+  test "binary op indentations" do
+    assert_formatted_content("binary_op_indentations")
   end
 
   test "anonymous function indentations" do
