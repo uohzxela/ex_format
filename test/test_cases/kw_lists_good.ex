@@ -87,3 +87,7 @@ defmodule Mssqlex.Mixfile do
   # Docs
   def application, do: [extra_applications: [:logger, :odbc]]
 end
+
+for app <- apps,
+  do: {app, path},
+  into: %{}
