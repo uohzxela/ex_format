@@ -108,7 +108,7 @@ defmodule EEx do
       args = Enum.map(args, fn arg -> {arg, [line: info[:line]], nil} end)
       compiled = EEx.compile_string(source, info)
 
-      case(kind) do
+      case kind do
         :def ->
           def unquote(name)(unquote_splicing(args)), do: unquote(compiled)
         :defp ->

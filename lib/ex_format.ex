@@ -682,7 +682,11 @@ defmodule ExFormat do
     :cond,
     :with,
     :for,
-    :use
+    :use,
+    :case,
+    :import,
+    :not,
+    :alias,
   ])
   defp call_to_string_with_args(target, args, fun) do
     need_parens = not target in @parenless_calls
