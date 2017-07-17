@@ -1,7 +1,8 @@
 defp map_list_to_string(list, fun) do
-  list_string = Enum.map_join(list, ", ", fn {key, value} ->
-    to_string(key, fun) <> " => " <> to_string(value, fun)
-  end)
+  list_string =
+    Enum.map_join(list, ", ", fn {key, value} ->
+      to_string(key, fun) <> " => " <> to_string(value, fun)
+    end)
 end
 
 fn key ->

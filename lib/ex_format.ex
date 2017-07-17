@@ -417,9 +417,18 @@ defmodule ExFormat do
     fun.(ast, left_string <> pipeline_op <> right_string)
   end
 
+  # Assignment op
+  def to_string({:= = op, _, [left, right]} = ast, fun) do
+    left_op_string = op_to_string(left, fun, op, :left)
+    right_op_string = op_to_string(right, fun, op, :right)
+    case right_op_string =~ "\n" do
+      true -> fun.(ast, left_op_string <> adjust_new_lines(" #{op}\n" <> right_op_string, "\n  "))
+      false -> fun.(ast, left_op_string <> " #{op} " <> right_op_string)
+    end
+  end
+
   # Binary ops
   def to_string({op, _, [left, right]} = ast, fun) when op in unquote(@binary_ops) do
-    # TODO: check for multi-line expr, then indent by two spaces if necessary (adjust_new_lines/2)
     fun.(ast, op_to_string(left, fun, op, :left) <> " #{op} " <> op_to_string(right, fun, op, :right))
   end
 
@@ -441,7 +450,7 @@ defmodule ExFormat do
   end
 
   def to_string({:&, _, [arg]} = ast, fun) when not is_integer(arg) do
-    fun.(ast, "&(" <> to_string(arg, fun) <> ")")
+    fun.(ast, "&" <> to_string(arg, fun))
   end
 
   # Unary ops
