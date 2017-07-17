@@ -100,4 +100,8 @@ defmodule ExFormatTest do
   test "anonymous function indentations" do
     assert_formatted_content("anon_funs_indentations")
   end
+
+  test "multiline expression assignment" do
+    assert_formatted_content("multiline_expr_assignments")
+  end
 end

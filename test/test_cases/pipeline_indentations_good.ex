@@ -17,7 +17,8 @@ String.strip(input)
 |> String.downcase()
 |> String.slice(1, 3) # inline comment
 
-args = args_to_string(args, fun) # inline comment
-|> String.split("\"")
-|> Enum.drop(-1) # inline comment
-|> Enum.join()
+args =
+  args_to_string(args, fun)
+  |> String.split("\"")
+  |> Enum.drop(-1) # inline comment
+  |> Enum.join()
