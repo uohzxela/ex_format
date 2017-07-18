@@ -11,7 +11,8 @@ defmodule ComparisonTest do
          function_name = ExUnit.Case.register_test(__ENV__, :test, "#{String.trim(name)} (#{file})", [])
          def unquote(function_name)(_) do
            formatted = ExFormat.process_string(unquote(bad))
-           assert ^formatted = unquote(good)
+           expected = unquote(good)
+           assert ^formatted = expected
          end
        end)
   end)
