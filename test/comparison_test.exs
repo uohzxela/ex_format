@@ -17,7 +17,7 @@ defmodule ComparisonTest do
          def unquote(function_name)(_) do
            formatted = ExFormat.process_string(unquote(before_string))
            expected = unquote(after_string)
-           assert ^formatted = expected
+           assert formatted == expected
          end
        end)
   end)
