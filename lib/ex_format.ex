@@ -47,6 +47,11 @@ defmodule ExFormat do
   def process(file_name) do
     file_name
     |> File.read!
+    |> process_string
+  end
+
+  def process_string(string) do
+    string
     |> prepare_data
     |> preprocess
     |> format
