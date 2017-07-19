@@ -104,4 +104,8 @@ defmodule ExFormatTest do
   test "multiline expression assignment" do
     assert_formatted_content("multiline_expr_assignments")
   end
+
+  test "integer literals" do
+    assert_formatted_content("integer_literals")
+  end
 end

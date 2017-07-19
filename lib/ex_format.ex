@@ -298,8 +298,11 @@ defmodule ExFormat do
   end
 
   # Blocks
-  def to_string({:__block__, _, [expr]} = ast, fun) do
-    fun.(ast, to_string(expr, fun))
+  def to_string({:__block__, meta, [expr]} = ast, fun) do
+    case Keyword.has_key?(meta, :format) do
+      true -> format_integer_literal(ast, fun)
+      false -> fun.(ast, to_string(expr, fun))
+    end
   end
 
   def to_string({:__block__, _, _} = ast, fun) do
@@ -939,5 +942,17 @@ defmodule ExFormat do
         false -> <<x>>
       end
     end
+  end
+
+  defp format_integer_literal({:__block__, meta, [int]} = ast, fun) do
+    expr =
+      case meta[:format] do
+        :char -> "?" <> List.to_string([int])
+        :binary -> "0b" <> Integer.to_string(int, 2)
+        :octal -> "0o" <> Integer.to_string(int, 8)
+        :hexadecimal -> "0x" <> Integer.to_string(int, 16)
+        _ -> Integer.to_string(int)
+      end
+    fun.(ast, expr)
   end
 end
