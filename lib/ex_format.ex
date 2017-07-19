@@ -174,7 +174,7 @@ defmodule ExFormat do
   end
   defp get_inline_comments(k) do
     vals = Agent.get(:inline_comments, fn map -> Map.get(map, k) end)
-    v = case vals do
+    case vals do
       nil ->
         ""
       [] ->
@@ -226,7 +226,7 @@ defmodule ExFormat do
 
   defp multiline?(ast) do
     case ast do
-      {:__block__, meta, [expr]} ->
+      {:__block__, meta, [_expr]} ->
         format(ast) =~ "\n" or (meta != [] and has_suffix_comments(meta[:line]+1))
       {:__block__, _, _} ->
         true
@@ -246,7 +246,7 @@ defmodule ExFormat do
     |> List.first
   end
 
-  defp get_meta({_, meta, _} = ast) do
+  defp get_meta({_, meta, _}) do
     case Keyword.keyword?(meta) do
       true -> meta
       false -> []
@@ -612,7 +612,7 @@ defmodule ExFormat do
       {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
         "\#{" <> to_string(arg, fun) <> "}"
       binary when is_binary(binary) ->
-        binary = escape_terminators(binary, terminator)
+        escape_terminators(binary, terminator)
     end)
     case terminator do
       [c] ->
@@ -669,7 +669,7 @@ defmodule ExFormat do
   defp call_to_string(other, fun),
     do: to_string(other, fun)
 
-  defp call_to_string_with_args({:., _, [:erlang, :binary_to_atom]} = target, args, fun) do
+  defp call_to_string_with_args({:., _, [:erlang, :binary_to_atom]}, args, fun) do
     args = args_to_string(args, fun)
     |> String.split("\"")
     |> Enum.drop(-1)
@@ -777,6 +777,13 @@ defmodule ExFormat do
     to_string(update_map, fun) <> " | " <> map_to_string(update_args, fun)
   end
 
+  defp map_to_string(list, fun) do
+    cond do
+      Inspect.List.keyword?(list) -> kw_list_to_string(list, fun)
+      true -> map_list_to_string(list, fun)
+    end
+  end
+
   def fits?(s), do: String.length(s) <= @split_threshold
 
   defp line_breaks?(list) when is_list(list) do
@@ -808,13 +815,6 @@ defmodule ExFormat do
     end
   end
 
-  defp map_to_string(list, fun) do
-    cond do
-      Inspect.List.keyword?(list) -> kw_list_to_string(list, fun)
-      true -> map_list_to_string(list, fun)
-    end
-  end
-
   defp list_to_string(list, fun) do
     list_string = Enum.map_join(list, ", ", &to_string(&1, fun))
     if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
@@ -824,7 +824,7 @@ defmodule ExFormat do
     end
   end
 
-  defp list_to_multiline_string(list, fun) do
+  defp list_to_multiline_string(list, _fun) do
     list_string = Enum.map_join(list, ",\n  ", fn value ->
       elem = adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
       prefix_comments_to_elem(value, elem)
@@ -847,7 +847,7 @@ defmodule ExFormat do
     end
   end
 
-  defp kw_list_to_multiline_string(list, fun) do
+  defp kw_list_to_multiline_string(list, _fun) do
     list_string = Enum.map_join(list, ",\n  ", fn {key, value} ->
       atom_name = case Inspect.Atom.inspect(key) do
         ":" <> rest -> rest
@@ -870,7 +870,7 @@ defmodule ExFormat do
     end
   end
 
-  defp map_list_to_multiline_string(list, fun) do
+  defp map_list_to_multiline_string(list, _fun) do
     list_string = Enum.map_join(list, ",\n  ", fn {key, value} ->
       elem = to_string(key, fn(_ast, string) -> string end) <> " => " <>
         adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
@@ -888,7 +888,7 @@ defmodule ExFormat do
     end
   end
 
-  defp tuple_to_multiline_string(tuple, fun) do
+  defp tuple_to_multiline_string(tuple, _fun) do
     tuple_string = Enum.map_join(tuple, ",\n  ", fn value ->
       elem = adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
       prefix_comments_to_elem(value, elem)
