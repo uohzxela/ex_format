@@ -8,7 +8,7 @@
 
 ## Running locally
 
-Note that this formatter requires Elixir >= v1.5 to work. As of now, Elixir v1.5 is still unreleased, however, you can build it manually from the master branch.
+Note that this formatter requires Elixir >= v1.5 to work, and works best with Elixir v1.6. As of now, Elixir v1.6 is still unreleased, however, you can build it manually from the Elixir [master](https://github.com/elixir-lang/elixir) branch.
 
 Run `iex -S mix` to compile the project and open the Elixir interactive shell.
 
@@ -46,6 +46,7 @@ Once inside the shell, run `ExFormat.process("filename.ex")` to try it out.
 - [x] [expression-group-alignment](https://github.com/lexmag/elixir-style-guide#expression-group-alignment)
 - [ ] [fun-parens](https://github.com/lexmag/elixir-style-guide#fun-parens)
 - [ ] [zero-arity-parens](https://github.com/lexmag/elixir-style-guide#zero-arity-parens)
+- [x] [anonymous-fun-parens](https://github.com/lexmag/elixir-style-guide#anonymous-fun-parens)
 - [x] [pipeline-indentation](https://github.com/lexmag/elixir-style-guide#pipeline-operator)
 - [x] [binary-operators-eols](https://github.com/lexmag/elixir-style-guide#binary-operators-at-eols)
 - [ ] [with-indentation](https://github.com/lexmag/elixir-style-guide#with-indentation)
