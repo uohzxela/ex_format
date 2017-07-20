@@ -1,4 +1,4 @@
-defmodule ExFormat.Unit.IntegerTest do
+defmodule ExFormat.Unit.LiteralTest do
   import Test.Support.Unit
   use ExUnit.Case
 
@@ -25,6 +25,13 @@ defmodule ExFormat.Unit.IntegerTest do
     test "char representation" do
       assert_format_string("?è\n")
       assert_format_string("?4\n")
+    end
+  end
+
+  describe "atom literal" do
+    test "atom literals that need to be quoted, use double quotes around the atom name" do
+      assert_format_string(":'foo-bar'", ":\"foo-bar\"\n")
+      assert_format_string(":'atom number \#{index}'", ":\"atom number \#{index}\"\n")
     end
   end
 end

@@ -60,9 +60,9 @@ defmodule ExFormatTest do
   #   assert_format_file("fun_parens")
   # end
 
-  test "when using atom literals that need to be quoted, use double quotes around the atom name" do
-    assert_format_file("quotes_around_atoms")
-  end
+  # test "when using atom literals that need to be quoted, use double quotes around the atom name" do
+  #   assert_format_file("quotes_around_atoms")
+  # end
 
   test "avoid aligning expression groups" do
     assert_format_file("expression_group_alignment")
