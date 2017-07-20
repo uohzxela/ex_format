@@ -163,4 +163,62 @@ defmodule ExFormat.Unit.CommentTest do
       """
     )
   end
+
+  describe "preserves doc comments" do
+    test "for @moduledoc" do
+      assert_format_string(
+        """
+        @moduledoc ~S\"\"\"
+        # comment
+        "some string"
+        \"\"\"
+        """
+      )
+
+      assert_format_string(
+        """
+        @moduledoc \"\"\"
+        # comment
+        "some string"
+        \"\"\"
+        """
+      )
+    end
+
+    test "for @doc" do
+      assert_format_string(
+        """
+        @doc ~S\"\"\"
+        # comment
+        "some string"
+        \"\"\"
+        """
+      )
+
+      assert_format_string(
+        """
+        @doc \"\"\"
+        # comment
+        "some string"
+        \"\"\"
+        """
+      )
+    end
+
+    test "with charlist" do
+      assert_format_string(
+        """
+        @doc ~S'''
+        this is a heredoc sigil
+        this is a 'charlist'
+        '''
+        """
+      )
+    end
+
+    test "with false" do
+      assert_format_string("@doc false\n")
+      assert_format_string("@moduledoc false\n")
+    end
+  end
 end
