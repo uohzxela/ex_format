@@ -100,7 +100,7 @@ defmodule ExFormat do
       fingerprint = get_line_fingerprint line
       line <> get_inline_comments(fingerprint)
     end)
-    IO.puts formatted
+    # IO.puts formatted
     formatted <> "\n"
   end
 
