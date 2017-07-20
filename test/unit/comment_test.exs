@@ -2,16 +2,94 @@ defmodule ExFormat.Unit.CommentTest do
   import Test.Support.Unit
   use ExUnit.Case
 
-  test "preserves prefix comments" do
+  describe "preserves prefix comments" do
+
+    test "for function definitions" do
+      assert_format_string(
+        """
+        # comment
+        def f(), do: something
+        """
+      )
+    end
+
+    test "for numbers" do
+      assert_format_string(
+        """
+        # comment
+        123
+        """
+      )
+
+      assert_format_string(
+        """
+        # comment
+        12.3
+        """
+      )
+
+      assert_format_string(
+        """
+        # comment
+        0xEF
+        """
+      )
+
+      assert_format_string(
+        """
+        # comment
+        0b10
+        """
+      )
+
+      assert_format_string(
+        """
+        # comment
+        0o17
+        """
+      )
+
+      assert_format_string(
+        """
+        # comment
+        ?è
+        """
+      )
+    end
+
+    test "for strings" do
+      assert_format_string(
+        """
+        # comment
+        "hello"
+        """
+      )
+    end
+
+    test "for lists" do
+      assert_format_string(
+        """
+        # comment
+        [1, 2, 3]
+        """
+      )
+    end
+
+    test "for tuples" do
+      assert_format_string(
+        """
+        # comment
+        {:ok, 1}
+        """
+      )
+
     assert_format_string(
       """
-      # prefix comment preserved
-      def hello(name) do
-        # prefix comment preserved
-        "hello " <> name
-      end
+      # comment
+      {:ok, 1, 2}
       """
     )
+    end
   end
 
   test "preserves suffix comments" do
