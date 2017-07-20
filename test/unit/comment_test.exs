@@ -3,23 +3,19 @@ defmodule ExFormat.Unit.CommentTest do
   use ExUnit.Case
 
   test "preserves prefix comments" do
-    """
-    # prefix comment preserved
-    def hello(name) do
+    assert_format_string(
+      """
+      # prefix comment preserved
+      def hello(name) do
         # prefix comment preserved
         "hello " <> name
-    end
-    """ >>>
-    """
-    # prefix comment preserved
-    def hello(name) do
-      # prefix comment preserved
-      "hello " <> name
-    end
-    """
+      end
+      """
+    )
   end
 
   test "preserves suffix comments" do
+    bad =
     """
     def test() do
       # comment 1
@@ -41,7 +37,9 @@ defmodule ExFormat.Unit.CommentTest do
       # comment 9
       # blah blah
     end
-    """ >>>
+    """
+
+    good = 
     """
     def test() do
       # comment 1
@@ -67,42 +65,24 @@ defmodule ExFormat.Unit.CommentTest do
       # blah blah
     end
     """
+
+    assert_format_string(bad, good)
   end
 
   test "preserves inline comments" do
-    """
-    def test() do # comment 0
-
-
-
-
-      # asdfasdf
-      1 + 2 # comment 1
-      if true do # comment 2
-        :random # comment 3
-
-
-
-
-        :asdf # comment 4
-      else # comment 5
-        :hello # comment 7
-      end # comment 6
-    end # comment 8
-    """ >>>
-    """
-    def test() do # comment 0
-
-      # asdfasdf
-      1 + 2 # comment 1
-      if true do # comment 2
-        :random # comment 3
-
-        :asdf # comment 4
-      else # comment 5
-        :hello # comment 7
-      end # comment 6
-    end # comment 8
-    """
+    assert_format_string(
+      """
+      def test() do # comment 0
+        # asdfasdf
+        1 + 2 # comment 1
+        if true do # comment 2
+          :random # comment 3
+          :asdf # comment 4
+        else # comment 5
+          :hello # comment 7
+        end # comment 6
+      end # comment 8
+      """
+    )
   end
 end
