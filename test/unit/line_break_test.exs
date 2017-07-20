@@ -18,17 +18,19 @@ defmodule ExFormat.Unit.LineBreakTest do
     end
 
     test "for function definitions" do
-      """
-      def f1(), do: something
-      def f1(), do: something
-      def f1(), do: something
+      assert_format_string(
+        """
+        def f1(), do: something
+        def f1(), do: something
+        def f1(), do: something
 
-      def f2(), do: something
-      def f2(), do: something
+        def f2(), do: something
+        def f2(), do: something
 
-      def f3(), do: something
-      def f3(), do: something
-      """
+        def f3(), do: something
+        def f3(), do: something
+        """
+      )
     end
   end
 end

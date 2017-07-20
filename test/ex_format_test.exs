@@ -19,9 +19,9 @@ defmodule ExFormatTest do
   # 	assert_format_file("line_breaks")
   # end
 
-  test "special indentation for guard clauses" do
-  	assert_format_file("guard_clauses")
-  end
+  # test "special indentation for guard clauses" do
+  # 	assert_format_file("guard_clauses")
+  # end
 
   # test "preservation of doc comments" do
   #   assert_format_file("doc_comments")
@@ -35,9 +35,9 @@ defmodule ExFormatTest do
   #   assert_format_file("inline_comments")
   # end
 
-  test "preservation of sigils and their terminators" do
-    assert_format_file("sigils")
-  end
+  # test "preservation of sigils and their terminators" do
+  #   assert_format_file("sigils")
+  # end
 
   test "spaces around binary operators, after commas, colons and semicolons" do
     assert_format_file("spaces_in_code")
