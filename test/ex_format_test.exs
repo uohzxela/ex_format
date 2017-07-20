@@ -15,17 +15,17 @@ defmodule ExFormatTest do
   # 	assert_format_file("prefix_comments")
   # end
 
-  test "preservation of line breaks and the collapsing of contiguous line breaks into a single one" do
-  	assert_format_file("line_breaks")
-  end
+  # test "preservation of line breaks and the collapsing of contiguous line breaks into a single one" do
+  # 	assert_format_file("line_breaks")
+  # end
 
   test "special indentation for guard clauses" do
   	assert_format_file("guard_clauses")
   end
 
-  test "preservation of doc comments" do
-    assert_format_file("doc_comments")
-  end
+  # test "preservation of doc comments" do
+  #   assert_format_file("doc_comments")
+  # end
 
   # test "preservation of suffix comments" do
   #   assert_format_file("suffix_comments")
