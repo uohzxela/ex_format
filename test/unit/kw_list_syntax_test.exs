@@ -4,22 +4,22 @@ defmodule ExFormat.Unit.KwListSyntaxTest do
 
   describe "preserves keyword list syntax" do
     test "for function definitions" do
-      assert_format_string("def func2(a2, b2), do: func3(a, b)\n")
+      assert_format_string("def f(), do: something\n")
       assert_format_string(
         """
-        def func1(a1, b1) do
-          func3(a, b)
+        def f() do
+          something
         end
         """
       )
     end
 
     test "for quote" do
-      assert_format_string("quote do: 1 + 2\n")
+      assert_format_string("quote do: something\n")
       assert_format_string(
         """
         quote do
-          1 + 2
+          something
         end
         """
       )
