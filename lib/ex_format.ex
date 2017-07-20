@@ -46,9 +46,14 @@ defmodule ExFormat do
 
   @split_threshold 80
 
-  def process(file_name) do
+  def format_file(file_name) do
     file_name
     |> File.read!
+    |> format_string
+  end
+
+  def format_string(content) do
+    content
     |> prepare_data
     |> preprocess
     |> format
