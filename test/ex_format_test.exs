@@ -64,9 +64,9 @@ defmodule ExFormatTest do
   #   assert_format_file("quotes_around_atoms")
   # end
 
-  test "avoid aligning expression groups" do
-    assert_format_file("expression_group_alignment")
-  end
+  # test "avoid aligning expression groups" do
+  #   assert_format_file("expression_group_alignment")
+  # end
 
   test "keyword lists line splitting" do
     assert_format_file("kw_lists")
@@ -92,15 +92,15 @@ defmodule ExFormatTest do
     assert_format_file("binary_op_indentations")
   end
 
-  test "anonymous function indentations" do
-    assert_format_file("anon_funs_indentations")
-  end
+  # test "anonymous function indentations" do
+  #   assert_format_file("anon_funs_indentations")
+  # end
 
-  test "multiline expression assignment" do
-    assert_format_file("multiline_expr_assignments")
-  end
+  # test "multiline expression assignment" do
+  #   assert_format_file("multiline_expr_assignments")
+  # end
 
-  test "integer literals" do
-    assert_format_file("integer_literals")
-  end
+  # test "integer literals" do
+  #   assert_format_file("integer_literals")
+  # end
 end
