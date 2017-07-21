@@ -19,15 +19,13 @@ defmodule ExFormat.Unit.WhiteSpaceTest do
     end
 
     test "spaces around default arguments \\\\ definition" do
-      bad =
-      """
+      bad = """
       def f(name, args\\\\[], options\\\\ []) do
         something
       end
       """
 
-      good =
-      """
+      good = """
       def f(name, args \\\\ [], options \\\\ []) do
         something
       end

@@ -25,28 +25,24 @@ defmodule ExFormat.Unit.SigilTest do
   end
 
   test "preserves heredoc terminators" do
-    assert_format_string(
-      """
-      ~S\"\"\"
-      Converts double-quotes to single-quotes.
+    assert_format_string """
+    ~S\"\"\"
+    Converts double-quotes to single-quotes.
 
-      ## Examples
+    ## Examples
 
-          iex> convert("\"foo\"")
-          "'foo'"
+        iex> convert("\"foo\"")
+        "'foo'"
 
-      \"\"\"
-      """
-    )
+    \"\"\"
+    """
 
-    assert_format_string(
-      """
-      ~S'''
-      'hello'
-      'another line'
-      ''
-      '''
-      """
-    )
+    assert_format_string """
+    ~S'''
+    'hello'
+    'another line'
+    ''
+    '''
+    """
   end
 end

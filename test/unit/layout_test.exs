@@ -3,8 +3,7 @@ defmodule ExFormat.Unit.LayoutTest do
   use ExUnit.Case
 
   test "avoid aligning expression groups" do
-    bad =
-    """
+    bad = """
     module = env.module
     arity  = length(args)
 
@@ -13,8 +12,7 @@ defmodule ExFormat.Unit.LayoutTest do
     def inspect(nil),   do: "nil"
     """
 
-    good =
-    """
+    good = """
     module = env.module()
     arity = length(args)
 
@@ -27,14 +25,12 @@ defmodule ExFormat.Unit.LayoutTest do
   end
 
   test "multiline expression assignment" do
-    bad =
-    """
+    bad = """
     {found, not_found} = Enum.map(files, &Path.expand(&1, path))
                          |> Enum.partition(&File.exists?/1)
     """
 
-    good =
-    """
+    good = """
     {found, not_found} =
       Enum.map(files, &Path.expand(&1, path))
       |> Enum.partition(&File.exists?() / 1)
@@ -42,8 +38,7 @@ defmodule ExFormat.Unit.LayoutTest do
 
     assert_format_string(bad, good)
 
-    bad =
-    """
+    bad = """
     prefix = case base do
                :binary -> "0b"
                :octal -> "0o"
@@ -51,8 +46,7 @@ defmodule ExFormat.Unit.LayoutTest do
              end
     """
 
-    good =
-    """
+    good = """
     prefix =
       case base do
         :binary ->
@@ -70,8 +64,7 @@ defmodule ExFormat.Unit.LayoutTest do
   describe "anonymous function indentation" do
     test "should indent if it has multiline expression" do
       bad = "fn k -> 1; 1+2 end"
-      good =
-      """
+      good = """
       fn k ->
         1
         1 + 2
@@ -79,24 +72,20 @@ defmodule ExFormat.Unit.LayoutTest do
       """
       assert_format_string(bad, good)
 
-      assert_format_string(
-        """
-        fn ->
-          1
-          1 + 2
-        end
-        """
-      )
+      assert_format_string """
+      fn ->
+        1
+        1 + 2
+      end
+      """
     end
 
     test "should indent if it has no multiline expression but line break is intended by user" do
-      assert_format_string(
-        """
-        fn k ->
-          1
-        end
-        """
-      )
+      assert_format_string """
+      fn k ->
+        1
+      end
+      """
       # this is a failing test because we have no way to detect line break if there's no fn args
       # assert_format_string(
       #   """
