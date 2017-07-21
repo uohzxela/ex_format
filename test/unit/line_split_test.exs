@@ -9,8 +9,7 @@ defmodule ExFormat.Unit.LineSplitTest do
 
     test "split if kw list is too long even though it has no line break" do
       bad = "[k1: 'v1', k2: 'v2', k3: 'v3', k4: 'v4', k5: 'v5',k1: 'v1', k2: 'v2', k3: 'v3', k4: 'v4', k5: 'v5',k1: 'v1', k2: 'v2', k3: 'v3', k4: 'v4', k5: 'v5']"
-      good =
-      """
+      good = """
       [
         k1: 'v1',
         k2: 'v2',
@@ -33,14 +32,12 @@ defmodule ExFormat.Unit.LineSplitTest do
     end
 
     test "split if kw list has intended line break" do
-      bad =
-      """
+      bad = """
       [k1: 'v1', k2: 'v2',
       k3: 'v3', k4:
       'v4', k5: 'v5']
       """
-      good =
-      """
+      good = """
       [
         k1: 'v1',
         k2: 'v2',
@@ -53,8 +50,7 @@ defmodule ExFormat.Unit.LineSplitTest do
     end
 
     test "with a complex nested example" do
-      bad =
-      """
+      bad = """
       [
         # comment1
         # comment 2
@@ -70,8 +66,7 @@ defmodule ExFormat.Unit.LineSplitTest do
         key3: "val3",
       ]
       """
-      good =
-      """
+      good = """
       [
         # comment1
         # comment 2
@@ -112,13 +107,11 @@ defmodule ExFormat.Unit.LineSplitTest do
     end
 
     test "no trailing comma if kw list is used as arg list" do
-      assert_format_string(
-        """
-        for app <- apps,
-          do: {app, path},
-          into: %{}
-        """
-      )
+      assert_format_string """
+      for app <- apps,
+        do: {app, path},
+        into: %{}
+      """
     end
   end
 end
