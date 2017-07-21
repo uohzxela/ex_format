@@ -63,10 +63,17 @@ defmodule ExFormat.Unit.CommentTest do
       {:ok, 1}
       """
 
-    assert_format_string """
-    # comment
-    {:ok, 1, 2}
-    """
+      assert_format_string """
+      # comment
+      {:ok, 1, 2}
+      """
+    end
+
+    test "for maps" do
+      assert_format_string """
+      # comment
+      %{:key => :value}
+      """
     end
   end
 
