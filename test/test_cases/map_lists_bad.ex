@@ -2,22 +2,18 @@
 
 %{:a => 1, "somelonglonglongkey" => :b, 12345679 => "somelonglonglongvalue", :some_long_atom_key => [1,2,3,5,6,7], "k1" => "aassddff"}
 
-# comments can be preserved!
 %{
-
-
-  :a => 1,
-# comment1
+:a => 1,
 2 => :b,
 :some_atom => %{
-  :key => :val, # inline comment 1
-  :key => "value", # inline comment2
+  :key => :val,
+  :key => "value",
   :key => %{
     "another day" => "another way",
     "see you in" => "july",
     "where the sun" => "shines"
   }
-  }}
+}}
 
 defmodule MyMod do
   def myfunc do
