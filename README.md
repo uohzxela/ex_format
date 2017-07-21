@@ -1,10 +1,6 @@
 # ex_format
 
-> `ex_format` is still in alpha.  If you run into any problems, please [report them](https://github.com/uohzxela/ex_format/issues).
->
-> **The format produced by ex_format may change significantly before the 1.0.0 release.**  If this will cause problems for you, please refrain from using ex_format during the alpha- and beta-test periods.
-
-`ex_format` formats Elixir source code according to a standard set of rules based on the [elixir-style-guide](https://github.com/lexmag/elixir-style-guide). It tries its best to accommodate the user's intent by preserving intended layout and syntax.
+ExFormat formats Elixir source code according to a standard set of rules based on the [elixir-style-guide](https://github.com/lexmag/elixir-style-guide). It tries its best to accommodate the user's intent by preserving intended layout and syntax.
 
 ## Running locally
 
@@ -12,7 +8,7 @@ Note that this formatter requires Elixir >= v1.5 to work, and works best with El
 
 Run `iex -S mix` to compile the project and open the Elixir interactive shell.
 
-Once inside the shell, run `ExFormat.process("filename.ex")` to try it out.
+Once inside the shell, run `ExFormat.format_string/1` to try it out.
 
 ## What it can do so far
 
@@ -25,7 +21,7 @@ Once inside the shell, run `ExFormat.process("filename.ex")` to try it out.
 - Preserve intended keyword list syntax (e.g., `do: something`)
 - Preserve sigils along with their intended terminators
 - Preserve intended line breaks for various syntactic constructs (e.g., `|>` or `<>` operator)
-- Line width aware printing
+- Line width aware printing, limited to lists, tuples, maps
 
 
 ## Task list according to Elixir style guide
@@ -51,7 +47,6 @@ Once inside the shell, run `ExFormat.process("filename.ex")` to try it out.
 - [x] [binary-operators-eols](https://github.com/lexmag/elixir-style-guide#binary-operators-at-eols)
 - [ ] [with-indentation](https://github.com/lexmag/elixir-style-guide#with-indentation)
 - [ ] [for-indentation](https://github.com/lexmag/elixir-style-guide#for-indentation)
-- [ ] [no-nil-else](https://github.com/lexmag/elixir-style-guide#no-nil-else)
 - [x] [hex-literals](https://github.com/lexmag/elixir-style-guide#hex-literals)
 - [ ] [module-layout](https://github.com/lexmag/elixir-style-guide#module-layout)
 - [ ] [current-module-reference](https://github.com/lexmag/elixir-style-guide#current-module-reference)
