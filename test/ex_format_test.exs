@@ -68,9 +68,9 @@ defmodule ExFormatTest do
   #   assert_format_file("expression_group_alignment")
   # end
 
-  test "keyword lists line splitting" do
-    assert_format_file("kw_lists")
-  end
+  # test "keyword lists line splitting" do
+  #   assert_format_file("kw_lists")
+  # end
 
   test "lists line splitting" do
     assert_format_file("lists")
