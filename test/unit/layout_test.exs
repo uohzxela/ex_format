@@ -33,7 +33,7 @@ defmodule ExFormat.Unit.LayoutTest do
     good = """
     {found, not_found} =
       Enum.map(files, &Path.expand(&1, path))
-      |> Enum.partition(&File.exists?() / 1)
+      |> Enum.partition(&File.exists?/1)
     """
 
     assert_format_string(bad, good)

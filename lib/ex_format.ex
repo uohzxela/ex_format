@@ -145,6 +145,7 @@ defmodule ExFormat do
           {ast, prev_ctx}
       end
     end)
+    # IO.inspect ast
     ast
   end
 
@@ -448,12 +449,12 @@ defmodule ExFormat do
 
   # Capture
   def to_string({:&, _, [{:/, _, [{name, _, ctx}, arity]}]} = ast, fun)
-      when is_atom(name) and is_atom(ctx) and is_integer(arity) do
+      when is_atom(name) and is_atom(ctx) do
     fun.(ast, "&" <> Atom.to_string(name) <> "/" <> to_string(arity, fun))
   end
 
   def to_string({:&, _, [{:/, _, [{{:., _, [mod, name]}, _, []}, arity]}]} = ast, fun)
-      when is_atom(name) and is_integer(arity) do
+      when is_atom(name) do
     fun.(ast, "&" <> to_string(mod, fun) <> "." <> Atom.to_string(name) <> "/" <> to_string(arity, fun))
   end
 
