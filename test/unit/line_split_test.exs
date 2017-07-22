@@ -109,8 +109,8 @@ defmodule ExFormat.Unit.LineSplitTest do
     test "no trailing comma if kw list is used as arg list" do
       assert_format_string """
       for app <- apps,
-        do: {app, path},
-        into: %{}
+          do: {app, path},
+          into: %{}
       """
     end
 
@@ -441,80 +441,6 @@ defmodule ExFormat.Unit.LineSplitTest do
         },
         "last element standing", # inline comment 2
       }
-      """
-      assert_format_string(bad, good)
-    end
-  end
-
-  describe "pipeline indentation" do
-    test "do not split if pipeline has no line break" do
-      assert_format_string("1 |> 2 |> 3 |> 4\n")
-    end
-
-    test "split if pipeline is too long even though it has no line break" do
-      bad = "input |> Some.verylongcall() |> Again.verylonglongcall() |> AgainAgain.verylonglongcall() |> AgainAgainAgain.verylonglongcall"
-      good = """
-      input |> Some.verylongcall() |> Again.verylonglongcall()
-      |> AgainAgain.verylonglongcall()
-      |> AgainAgainAgain.verylonglongcall()
-      """
-      assert_format_string(bad, good)
-    end
-
-    test "split if pipeline has intended line break" do
-      assert_format_string """
-      1
-      |> 2
-      |> 3
-      |> 4
-      """
-    end
-  end
-
-  describe "binary op indentation" do
-    test "do not split if binay op has no line break" do
-      assert_format_string """
-      "The Bronze Age trumpet's" <> "tone of exile" <> "hovers over bottomlessness."
-      """
-
-      assert_format_string("[1, 2] ++ [3, 4]\n")
-    end
-
-    test "split if binay op is too long even though it has no line break" do
-      bad = """
-      "In the first hours of day"<>"consciousness can embrace the world" <> "just as the hand grasps a sun-warm stone."
-      """
-      good = """
-      "In the first hours of day" <>
-      "consciousness can embrace the world" <>
-      "just as the hand grasps a sun-warm stone."
-      """
-      assert_format_string(bad, good)
-    end
-
-    test "split if binay op has intended line break" do
-      bad = """
-      "The traveler stands under the tree. After"
-      <> "the plunge through"<> # death's whirling vortex, will
-      "a great light" # unfurl over his head?
-      """
-      good = """
-      "The traveler stands under the tree. After" <>
-      "the plunge through" <> # death's whirling vortex, will
-      "a great light" # unfurl over his head?
-      """
-      assert_format_string(bad, good)
-
-      bad = """
-      [{:prev, prev_lineno}] ++
-      [{:prefix_comments, get_prefix_comments(curr_lineno-1, prev_lineno)}] ++
-      [{:prefix_newline, get_prefix_newline(curr_lineno-1, prev_lineno)}] ++ curr_ctx
-      """
-      good = """
-      [{:prev, prev_lineno}] ++
-      [{:prefix_comments, get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
-      [{:prefix_newline, get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
-      curr_ctx
       """
       assert_format_string(bad, good)
     end

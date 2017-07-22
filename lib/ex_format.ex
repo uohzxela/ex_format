@@ -687,7 +687,7 @@ defmodule ExFormat do
     <<?:, ?", args::binary, ?">>
   end
 
-  @parenless_calls([
+  @parenless_calls [
     :def,
     :defp,
     :defmacro,
@@ -705,7 +705,14 @@ defmodule ExFormat do
     :import,
     :not,
     :alias,
-  ])
+  ]
+
+  defp call_to_string_with_args(target, args, fun) when target in [:with, :for] do
+    target_string = Atom.to_string(target) <> " "
+    target_string <>
+    args_to_string(args, fun, ",\n#{String.duplicate(" ", String.length(target_string))}")
+  end
+
   defp call_to_string_with_args(target, args, fun) do
     need_parens = not target in @parenless_calls
     target = call_to_string(target, fun)
@@ -721,16 +728,27 @@ defmodule ExFormat do
   end
 
   defp args_to_string(args, fun) do
+    args_to_string(args, fun, ", ")
+  end
+
+  defp args_to_string(args, fun, delimiter) do
     {list, last} = :elixir_utils.split_last(args)
     if last != [] and Inspect.List.keyword?(last) do
       prefix =
         case list do
           [] -> ""
-          _  -> Enum.map_join(list, ", ", &to_string(&1, fun)) <> ", "
+          _  -> Enum.map_join(list, delimiter, &to_string(&1, fun)) <> ", "
         end
-      prefix <> String.replace_suffix(kw_list_to_string(last, fun), ",\n", "")
+      <<?,, ?\n, indentation::binary>> = delimiter
+      kw_list_string =
+        # remove trailing comma and newline from multiline kw list args, if any
+        String.replace_suffix(kw_list_to_string(last, fun), ",\n", "")
+        |> String.split("\n  ")
+        |> Enum.map_join("\n#{indentation}", fn elem -> elem end)
+
+      prefix <> kw_list_string
     else
-      Enum.map_join(args, ", ", &to_string(&1, fun))
+      Enum.map_join(args, delimiter, &to_string(&1, fun))
     end
   end
 
@@ -862,7 +880,7 @@ defmodule ExFormat do
         ":" <> rest -> rest
         other       -> other
       end
-      kw = atom_name <> ": " <>adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
+      kw = atom_name <> ": " <> adjust_new_lines(to_string(value, fn(_ast, string) -> string end), "\n  ")
       prefix_comments_to_elem(value, kw)
     end)
     "\n  " <> list_string <> ",\n"
