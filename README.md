@@ -1,4 +1,4 @@
-# ex_format
+# ExFormat
 
 ExFormat formats Elixir source code according to a standard set of rules based on the [elixir-style-guide](https://github.com/lexmag/elixir-style-guide). It tries its best to accommodate the user's intent by preserving intended layout and syntax.
 
@@ -8,7 +8,7 @@ Note that this formatter requires Elixir >= v1.5 to work, and works best with El
 
 Run `iex -S mix` to compile the project and open the Elixir interactive shell.
 
-Once inside the shell, run `ExFormat.format_string/1` to try it out.
+Once inside the shell, pass any valid Elixir code to `ExFormat.format_string/1` to try it out.
 
 ## What it can do so far
 
@@ -21,10 +21,10 @@ Once inside the shell, run `ExFormat.format_string/1` to try it out.
 - Preserve intended keyword list syntax (e.g., `do: something`)
 - Preserve sigils along with their intended terminators
 - Preserve intended line breaks for various syntactic constructs (e.g., `|>` or `<>` operator)
-- Line width aware printing, limited to lists, tuples, maps
+- Line width aware printing, but only limited to lists, keyword lists, tuples and maps
 
 
-## Task list according to Elixir style guide
+## Checklist according to Elixir style guide
 
 - [x] [spaces-indentation](https://github.com/lexmag/elixir-style-guide#spaces-indentation)
 - [x] [no-semicolon](https://github.com/lexmag/elixir-style-guide#no-semicolon)
