@@ -275,7 +275,7 @@ defmodule ExFormat.Unit.LineSplitTest do
       %{
         :a => 1,
         "somelonglonglongkey" => :b,
-        12345679 => "somelonglonglongvalue",
+        12_345_679 => "somelonglonglongvalue",
         :some_long_atom_key => [1, 2, 3, 5, 6, 7],
         "k1" => "aassddff",
       }
@@ -434,7 +434,7 @@ defmodule ExFormat.Unit.LineSplitTest do
             "together",
             {
               :is_this,
-              123123,
+              123_123,
               "possible?",
             },
           },
