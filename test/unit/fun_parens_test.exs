@@ -17,7 +17,7 @@ defmodule ExFormat.Unit.FunParensTest do
       assert_format_string("defmacrop f(), do: something\n")
     end
 
-    test "for multiple function definitions in a block" do
+    test "with multiple function definitions" do
       bad = """
       def f, do: something
       defp f, do: something
@@ -31,24 +31,66 @@ defmodule ExFormat.Unit.FunParensTest do
       defmacrop f(), do: something
       """
       assert_format_string(bad, good)
+
+      bad = """
+      def main arg1, arg2 do
+        something
+      end
+
+      def main do
+        something
+      end
+      """
+      good = """
+      def main(arg1, arg2) do
+        something
+      end
+
+      def main() do
+        something
+      end
+      """
+      assert_format_string(bad, good)
     end
   end
 
   describe "always use parentheses for zero-arity function calls" do
     test "for locally defined functions" do
-      bad = """
-      def f, do: something
-      f
-      """
       good = """
-      def f(), do: something
-      f()
+      def f1(), do: something
+      defp f2(), do: something
+      defmacro f3(), do: something
+      defmacrop f4(), do: something
+
+      f1()
+      f2()
+      f3()
+      f4()
+      """
+
+      bad = """
+      def f1, do: something
+      defp f2, do: something
+      defmacro f3, do: something
+      defmacrop f4, do: something
+
+      f1
+      f2
+      f3
+      f4
       """
       assert_format_string(bad, good)
 
       bad = """
-      def f(), do: something
-      f
+      def f1(), do: something
+      defp f2(), do: something
+      defmacro f3(), do: something
+      defmacrop f4(), do: something
+
+      f1
+      f2
+      f3
+      f4
       """
       assert_format_string(bad, good)
     end
