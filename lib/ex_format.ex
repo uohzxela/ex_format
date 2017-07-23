@@ -710,8 +710,8 @@ defmodule ExFormat do
 
   defp call_to_string_with_args(target, args, fun) when target in [:with, :for] do
     target_string = Atom.to_string(target) <> " "
-    target_string <>
-    args_to_string(args, fun, ",\n#{String.duplicate(" ", String.length(target_string))}")
+    delimiter = ",\n#{String.duplicate(" ", String.length(target_string))}"
+    target_string <> args_to_string(args, fun, delimiter)
   end
 
   defp call_to_string_with_args(target, args, fun) do
@@ -741,8 +741,9 @@ defmodule ExFormat do
           _  -> Enum.map_join(list, delimiter, &to_string(&1, fun)) <> ", "
         end
       kw_list_string =
-        # remove trailing comma and newline from multiline kw list args, if any
-        String.replace_suffix(kw_list_to_string(last, fun), ",\n", "")
+        last
+        |> kw_list_to_string(fun)
+        |> String.replace_suffix(",\n", "")
         |> handle_kw_list_delimiter(delimiter)
       prefix <> kw_list_string
     else
