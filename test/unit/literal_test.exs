@@ -34,6 +34,17 @@ defmodule ExFormat.Unit.LiteralTest do
       assert_format_string("?4\n")
       assert_format_string("?\\n\n")
       assert_format_string("?\\t\n")
+
+      assert_format_string """
+      defp sigil_terminator(?/), do: ?/
+      defp sigil_terminator(?|), do: ?|
+      defp sigil_terminator(?\\"), do: ?\\"
+      defp sigil_terminator(?'), do: ?'
+      defp sigil_terminator(?(), do: ?)
+      defp sigil_terminator(?[), do: ?]
+      defp sigil_terminator(?{), do: ?}
+      defp sigil_terminator(?<), do: ?>
+      """
     end
   end
 

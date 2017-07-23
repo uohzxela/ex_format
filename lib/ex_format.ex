@@ -799,7 +799,10 @@ defmodule ExFormat do
 
   defp block_to_string({:__block__, meta, [expr]}, fun) do
     ast = {:__block__, update_meta(meta), [expr]}
-    fun.(ast, to_string(expr, fun))
+    case Keyword.has_key?(meta, :format) do
+      true -> format_integer_literal(ast, fun)
+      false -> fun.(ast, to_string(expr, fun))
+    end
   end
 
   defp block_to_string({:__block__, _, exprs}, fun) do
