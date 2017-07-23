@@ -135,7 +135,7 @@ defmodule ExFormat.Unit.LineSplitTest do
       end
       """
       good = """
-      def project do
+      def project() do
         [
           app: :mssqlex,
           version: "0.7.0",
@@ -245,7 +245,7 @@ defmodule ExFormat.Unit.LineSplitTest do
       end
       """
       good = """
-      defp deps do
+      defp deps() do
         [
           # Web server
           {:cowboy, "~> 1.0"},
@@ -333,7 +333,7 @@ defmodule ExFormat.Unit.LineSplitTest do
       """
       good = """
       defmodule MyMod do
-        def myfunc do
+        def myfunc() do
           assert(result == %{
             very_long_key_very_long_key1: 1,
             very_long_key_very_long_key2: 2,
