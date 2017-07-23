@@ -8,6 +8,7 @@ defmodule ExFormat.Unit.FunParensTest do
       assert_format_string("defp f(a), do: something\n")
       assert_format_string("defmacro f(a), do: something\n")
       assert_format_string("defmacrop f(a), do: something\n")
+      assert_format_string("defdelegate f(a), do: something\n")
     end
 
     test "for functions with no arguments" do
@@ -15,6 +16,7 @@ defmodule ExFormat.Unit.FunParensTest do
       assert_format_string("defp f(), do: something\n")
       assert_format_string("defmacro f(), do: something\n")
       assert_format_string("defmacrop f(), do: something\n")
+      assert_format_string("defdelegate f(), do: something\n")
     end
 
     test "for multiple function definitions in a block" do
@@ -23,12 +25,14 @@ defmodule ExFormat.Unit.FunParensTest do
       defp f, do: something
       defmacro f, do: something
       defmacrop f, do: something
+      defdelegate f, do: something
       """
       good = """
       def f(), do: something
       defp f(), do: something
       defmacro f(), do: something
       defmacrop f(), do: something
+      defdelegate f(), do: something
       """
       assert_format_string(bad, good)
 
