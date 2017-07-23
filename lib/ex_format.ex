@@ -968,6 +968,15 @@ defmodule ExFormat do
     end
   end
 
+  defp underscores_in_decimal(string) do
+    string
+    |> String.reverse()
+    |> Stream.unfold(&String.split_at(&1, 3))
+    |> Enum.take_while(&(&1 != ""))
+    |> Enum.map_join("_", &(&1))
+    |> String.reverse()
+  end
+
   defp format_integer_literal({:__block__, meta, [int]} = ast, fun) do
     expr =
       case meta[:format] do
@@ -975,6 +984,7 @@ defmodule ExFormat do
         :binary -> "0b" <> Integer.to_string(int, 2)
         :octal -> "0o" <> Integer.to_string(int, 8)
         :hexadecimal -> "0x" <> Integer.to_string(int, 16)
+        :decimal -> Integer.to_string(int) |> underscores_in_decimal()
         _ -> Integer.to_string(int)
       end
     fun.(ast, expr)

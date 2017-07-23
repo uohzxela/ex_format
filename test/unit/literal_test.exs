@@ -17,6 +17,13 @@ defmodule ExFormat.Unit.LiteralTest do
       assert_format_string("01", "1\n")
     end
 
+    test "underscores in large decimal" do
+      assert_format_string("999\n")
+      assert_format_string("1000", "1_000\n")
+      assert_format_string("1000000", "1_000_000\n")
+      assert_format_string("123123123", "123_123_123\n")
+    end
+
     test "hexadecimal representation" do
       assert_format_string("0xEF\n")
       assert_format_string("0xef", "0xEF\n")
