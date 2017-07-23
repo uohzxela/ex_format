@@ -153,7 +153,7 @@ defmodule ExFormat do
   defp handle_zero_arity_fun(ast) do
     case ast do
       {sym, meta1, [{fun, meta2, nil} | rest]} when
-          sym in [:def, :defp, :defmacro, :defmacrop] ->
+          sym in [:def, :defp, :defmacro, :defmacrop, :defdelegate] ->
         {sym, meta1, [{fun, meta2, []} | rest]}
       _ ->
         ast
@@ -703,14 +703,13 @@ defmodule ExFormat do
     :defp,
     :defmacro,
     :defmacrop,
+    :defdelegate,
     :defmodule,
     :defstruct,
     :if,
     :quote,
     :else,
     :cond,
-    :with,
-    :for,
     :use,
     :case,
     :import,
