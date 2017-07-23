@@ -77,7 +77,7 @@ defmodule ExFormat do
     lines = String.split(file_content, "\n")
     Agent.start_link(fn -> %{} end, name: :lines)
     Agent.start_link(fn -> %{} end, name: :inline_comments)
-    Agent.start_link(fn -> MapSet.new end, name: :zero_arity_funs)
+    Agent.start_link(fn -> MapSet.new([:self]) end, name: :zero_arity_funs)
 
     for {line, i} <- Enum.with_index(lines) do
       update_line(i+1, String.trim(line))
@@ -157,7 +157,13 @@ defmodule ExFormat do
       {sym, _, [{fun, _, args} | _]} when
           sym in [:def, :defp, :defmacro, :defmacrop] and
           args in [nil, []] ->
-        Agent.update(:zero_arity_funs, fn set -> MapSet.put(set, fun) end)
+        Agent.update(:zero_arity_funs, &MapSet.put(&1, fun))
+      {:import, _, [_aliases, [only: {:__block__, _, [imported_funs]}]]} ->
+        Enum.each imported_funs, fn {fun, {:__block__, _, [arity]}} ->
+          if arity == 0 do
+            Agent.update(:zero_arity_funs, &MapSet.put(&1, fun))
+          end
+        end
       _ ->
         nil
     end
@@ -309,7 +315,7 @@ defmodule ExFormat do
 
   # Variables
   def to_string({var, _, atom} = ast, fun) when is_atom(atom) do
-    zero_arity_fun? = Agent.get(:zero_arity_funs, fn set -> MapSet.member?(set, var) end)
+    zero_arity_fun? = Agent.get(:zero_arity_funs, &MapSet.member?(&1, var))
     suffix =
       case zero_arity_fun? do
         true -> "()"
@@ -759,16 +765,23 @@ defmodule ExFormat do
           [] -> ""
           _  -> Enum.map_join(list, delimiter, &to_string(&1, fun)) <> ", "
         end
-      <<?,, ?\n, indentation::binary>> = delimiter
       kw_list_string =
         # remove trailing comma and newline from multiline kw list args, if any
         String.replace_suffix(kw_list_to_string(last, fun), ",\n", "")
-        |> String.split("\n  ")
-        |> Enum.map_join("\n#{indentation}", fn elem -> elem end)
-
+        |> handle_kw_list_delimiter(delimiter)
       prefix <> kw_list_string
     else
       Enum.map_join(args, delimiter, &to_string(&1, fun))
+    end
+  end
+
+  defp handle_kw_list_delimiter(kw_list_string, delimiter) do
+    case delimiter do
+      <<?,, ?\n, indentation::binary>> ->
+        String.split(kw_list_string, "\n  ")
+        |> Enum.map_join("\n#{indentation}", &(&1))
+      _ ->
+        kw_list_string
     end
   end
 

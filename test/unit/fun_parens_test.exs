@@ -66,6 +66,8 @@ defmodule ExFormat.Unit.FunParensTest do
       f2()
       f3()
       f4()
+      f5
+      self()
       """
 
       bad = """
@@ -78,6 +80,8 @@ defmodule ExFormat.Unit.FunParensTest do
       f2
       f3
       f4
+      f5
+      self
       """
       assert_format_string(bad, good)
 
@@ -91,6 +95,24 @@ defmodule ExFormat.Unit.FunParensTest do
       f2
       f3
       f4
+      f5
+      self
+      """
+      assert_format_string(bad, good)
+    end
+
+    test "for imported functions" do
+      bad = """
+      import SomeModule, only: [f1: 0, f2: 2, f3: 0]
+      f1
+      f2
+      f3
+      """
+      good = """
+      import SomeModule, only: [f1: 0, f2: 2, f3: 0]
+      f1()
+      f2
+      f3()
       """
       assert_format_string(bad, good)
     end
