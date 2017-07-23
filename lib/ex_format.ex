@@ -129,20 +129,20 @@ defmodule ExFormat do
   end
 
   defp preprocess(ast) do
-    {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_ctx ->
+    {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_meta ->
       # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
       case ast do
         {:__block__, _, [nil]} ->
-          {ast, prev_ctx}
-        {sym, curr_ctx, args} ->
-          if curr_ctx != [] and prev_ctx != [] do
-            new_ctx = update_context(curr_ctx, prev_ctx)
-            {{sym, new_ctx, args}, new_ctx}
+          {ast, prev_meta}
+        {sym, curr_meta, args} ->
+          if curr_meta != [] and prev_meta != [] do
+            new_meta = update_meta(curr_meta, prev_meta)
+            {{sym, new_meta, args}, new_meta}
           else
-            {ast, prev_ctx}
+            {ast, prev_meta}
           end
         _ ->
-          {ast, prev_ctx}
+          {ast, prev_meta}
       end
     end)
     # IO.inspect ast
@@ -150,18 +150,18 @@ defmodule ExFormat do
   end
 
   # TODO: rename to update_meta
-  defp update_context(curr_ctx) do
-    curr_lineno = curr_ctx[:line]
+  defp update_meta(curr_meta) do
+    curr_lineno = curr_meta[:line]
     # TODO: is suffix_newline necessary?
-    [{:suffix_comments, get_suffix_comments(curr_lineno+1)}] ++ curr_ctx
+    [{:suffix_comments, get_suffix_comments(curr_lineno+1)}] ++ curr_meta
   end
-  defp update_context(curr_ctx, prev_ctx) do
-    curr_lineno = curr_ctx[:line]
-    prev_lineno = prev_ctx[:line]
+  defp update_meta(curr_meta, prev_meta) do
+    curr_lineno = curr_meta[:line]
+    prev_lineno = prev_meta[:line]
 
     [{:prev, prev_lineno}] ++
     [{:prefix_comments, get_prefix_comments(curr_lineno-1, prev_lineno)}] ++
-    [{:prefix_newline, get_prefix_newline(curr_lineno-1, prev_lineno)}] ++ curr_ctx
+    [{:prefix_newline, get_prefix_newline(curr_lineno-1, prev_lineno)}] ++ curr_meta
   end
 
   defp get_line(k), do: Agent.get(:lines, fn map -> Map.get(map, k) end)
@@ -789,7 +789,7 @@ defmodule ExFormat do
   end
 
   defp block_to_string({:__block__, meta, [expr]}, fun) do
-    ast = {:__block__, update_context(meta), [expr]}
+    ast = {:__block__, update_meta(meta), [expr]}
     fun.(ast, to_string(expr, fun))
   end
 
