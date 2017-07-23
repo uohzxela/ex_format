@@ -131,7 +131,7 @@ defmodule ExFormat do
 
   defp preprocess(ast) do
     {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_meta ->
-      # TODO: insert lineno in kw_list AST node e.g. [do: {...}]
+      ast = handle_zero_arity_fun(ast)
       case ast do
         {:__block__, _, [nil]} ->
           {ast, prev_meta}
@@ -148,6 +148,16 @@ defmodule ExFormat do
     end)
     # IO.inspect ast
     ast
+  end
+
+  defp handle_zero_arity_fun(ast) do
+    case ast do
+      {sym, meta1, [{fun, meta2, nil} | rest]} when
+          sym in [:def, :defp, :defmacro, :defmacrop] ->
+        {sym, meta1, [{fun, meta2, []} | rest]}
+      _ ->
+        ast
+    end
   end
 
   # TODO: rename to update_meta
