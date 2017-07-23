@@ -77,6 +77,8 @@ defmodule ExFormat do
     lines = String.split(file_content, "\n")
     Agent.start_link(fn -> %{} end, name: :lines)
     Agent.start_link(fn -> %{} end, name: :inline_comments)
+    Agent.start_link(fn -> MapSet.new end, name: :zero_arity_funs)
+
     for {line, i} <- Enum.with_index(lines) do
       update_line(i+1, String.trim(line))
       inline_comment_token = extract_inline_comment_token(line)
@@ -135,6 +137,7 @@ defmodule ExFormat do
         {:__block__, _, [nil]} ->
           {ast, prev_meta}
         {sym, curr_meta, args} ->
+          record_zero_arity_funs(ast)
           if curr_meta != [] and prev_meta != [] do
             new_meta = update_meta(curr_meta, prev_meta)
             {{sym, new_meta, args}, new_meta}
@@ -147,6 +150,17 @@ defmodule ExFormat do
     end)
     # IO.inspect ast
     ast
+  end
+
+  defp record_zero_arity_funs(ast) do
+    case ast do
+      {sym, _, [{fun, _, args} | _]} when
+          sym in [:def, :defp, :defmacro, :defmacrop] and
+          args in [nil, []] ->
+        Agent.update(:zero_arity_funs, fn set -> MapSet.put(set, fun) end)
+      _ ->
+        nil
+    end
   end
 
   # TODO: rename to update_meta
@@ -295,7 +309,13 @@ defmodule ExFormat do
 
   # Variables
   def to_string({var, _, atom} = ast, fun) when is_atom(atom) do
-    fun.(ast, Atom.to_string(var))
+    zero_arity_fun? = Agent.get(:zero_arity_funs, fn set -> MapSet.member?(set, var) end)
+    suffix =
+      case zero_arity_fun? do
+        true -> "()"
+        false -> ""
+      end
+    fun.(ast, Atom.to_string(var)) <> suffix
   end
 
   # Aliases
