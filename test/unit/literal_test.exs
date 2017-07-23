@@ -32,6 +32,8 @@ defmodule ExFormat.Unit.LiteralTest do
     test "char representation" do
       assert_format_string("?è\n")
       assert_format_string("?4\n")
+      assert_format_string("?\\n\n")
+      assert_format_string("?\\t\n")
     end
   end
 
