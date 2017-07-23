@@ -40,7 +40,7 @@ Once inside the shell, pass any valid Elixir code to `ExFormat.format_string/1` 
 - [x] [quotes-around-atoms](https://github.com/lexmag/elixir-style-guide#quotes-around-atoms)
 - [x] [trailing-comma](https://github.com/lexmag/elixir-style-guide#trailing-comma)
 - [x] [expression-group-alignment](https://github.com/lexmag/elixir-style-guide#expression-group-alignment)
-- [x] [fun-parens](https://github.com/lexmag/elixir-style-guide#fun-parens)
+- [ ] [fun-parens](https://github.com/lexmag/elixir-style-guide#fun-parens)
 - [ ] [zero-arity-parens](https://github.com/lexmag/elixir-style-guide#zero-arity-parens)
 - [x] [anonymous-fun-parens](https://github.com/lexmag/elixir-style-guide#anonymous-fun-parens)
 - [x] [pipeline-indentation](https://github.com/lexmag/elixir-style-guide#pipeline-operator)
