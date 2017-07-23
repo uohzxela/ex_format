@@ -148,7 +148,7 @@ defmodule ExFormat do
           {ast, prev_meta}
       end
     end)
-    # IO.inspect ast
+    IO.inspect ast
     ast
   end
 
@@ -485,7 +485,7 @@ defmodule ExFormat do
   end
 
   def to_string({:&, _, [arg]} = ast, fun) when not is_integer(arg) do
-    fun.(ast, "&" <> to_string(arg, fun))
+    fun.(ast, "&(" <> to_string(arg, fun) <> ")")
   end
 
   # Unary ops
@@ -1010,10 +1010,15 @@ defmodule ExFormat do
     |> String.reverse()
   end
 
+  defp codepoint_to_string(int) do
+    char = List.to_string([int]) |> inspect([])
+    :binary.part(char, 1, byte_size(char) - 2)
+  end
+
   defp format_integer_literal({:__block__, meta, [int]} = ast, fun) do
     expr =
       case meta[:format] do
-        :char -> "?" <> List.to_string([int])
+        :char -> "?" <> codepoint_to_string(int)
         :binary -> "0b" <> Integer.to_string(int, 2)
         :octal -> "0o" <> Integer.to_string(int, 8)
         :hexadecimal -> "0x" <> Integer.to_string(int, 16)
