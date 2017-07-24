@@ -155,6 +155,8 @@ defmodule ExFormat do
       {sym, meta1, [{fun, meta2, nil} | rest]} when
           sym in [:def, :defp, :defmacro, :defmacrop, :defdelegate] ->
         {sym, meta1, [{fun, meta2, []} | rest]}
+      {:|>, meta1, [left, {fun, meta2, nil}]} ->
+        {:|>, meta1, [left, {fun, meta2, []}]}
       _ ->
         ast
     end
