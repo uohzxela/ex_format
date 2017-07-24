@@ -160,7 +160,6 @@ defmodule ExFormat do
     end
   end
 
-  # TODO: rename to update_meta
   defp update_meta(curr_meta) do
     curr_lineno = curr_meta[:line]
     # TODO: is suffix_newline necessary?
@@ -249,7 +248,6 @@ defmodule ExFormat do
         true
       {_, meta, _} ->
         meta != [] and meta[:line] > meta[:prev]
-      # TODO: add more 'true' cases
       _ ->
         true
     end
@@ -541,7 +539,6 @@ defmodule ExFormat do
 
   # Lists
   def to_string(list, fun) when is_list(list) do
-    # TODO: preserve prefix newlines and comments
     fun.(list, cond do
       list == [] ->
         "[]"
