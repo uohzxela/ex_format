@@ -57,4 +57,26 @@ defmodule ExFormat.Unit.FunParensTest do
       assert_format_string(bad, good)
     end
   end
+
+  describe "do not omit parentheses" do
+    test "for remote zero-arity function calls" do
+      assert_format_string("Mix.env", "Mix.env()\n")
+    end
+
+    test "for one-arity function calls in pipelines" do
+      bad = """
+      input
+      |> String.strip
+      |> decode
+      """
+      good = """
+      input
+      |> String.strip()
+      |> decode()
+      """
+      assert_format_string(bad, good)
+
+      assert_format_string("input |> fun1 |> fun2", "input |> fun1() |> fun2()\n")
+    end
+  end
 end
