@@ -150,17 +150,14 @@ defmodule ExFormat do
     ast
   end
 
-  defp handle_zero_arity_fun(ast) do
-    case ast do
-      {sym, meta1, [{fun, meta2, nil} | rest]} when
-          sym in [:def, :defp, :defmacro, :defmacrop, :defdelegate] ->
-        {sym, meta1, [{fun, meta2, []} | rest]}
-      {:|>, meta1, [left, {fun, meta2, nil}]} ->
-        {:|>, meta1, [left, {fun, meta2, []}]}
-      _ ->
-        ast
-    end
+  @defs [:def, :defp, :defmacro, :defmacrop, :defdelegate]
+  defp handle_zero_arity_fun({sym, meta1, [{fun, meta2, nil} | rest]}) when sym in @defs do
+    {sym, meta1, [{fun, meta2, []} | rest]}
   end
+  defp handle_zero_arity_fun({:|>, meta1, [left, {fun, meta2, nil}]}) do
+    {:|>, meta1, [left, {fun, meta2, []}]}
+  end
+  defp handle_zero_arity_fun(ast), do: ast
 
   defp update_meta(curr_meta) do
     curr_lineno = curr_meta[:line]
