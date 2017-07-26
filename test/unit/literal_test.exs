@@ -54,4 +54,44 @@ defmodule ExFormat.Unit.LiteralTest do
       assert_format_string(":'atom number \#{index}'", ":\"atom number \#{index}\"\n")
     end
   end
+
+  describe "heredoc literal" do
+    test "charlist heredoc with no interpolation" do
+      assert_format_string """
+      '''
+      hello
+      world
+      '''
+      """
+    end
+
+    test "charlist heredoc with interpolation" do
+      assert_format_string """
+      '''
+      test
+      #{:hello}
+      world
+      '''
+      """
+    end
+
+    test "binary heredoc with no interpolation" do
+      assert_format_string """
+      \"\"\"
+      hello
+      world
+      \"\"\"
+      """
+    end
+
+    test "binary heredoc with interpolation" do
+      assert_format_string """
+      \"\"\"
+      test
+      #{:hello}
+      world
+      \"\"\"
+      """
+    end
+  end
 end
