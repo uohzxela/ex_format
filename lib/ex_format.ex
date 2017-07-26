@@ -314,7 +314,7 @@ defmodule ExFormat do
   # Blocks
   def to_string({:__block__, meta, [expr]} = ast, fun) do
     case Keyword.has_key?(meta, :format) do
-      true -> format_integer_literal(ast, fun)
+      true -> format_literal(ast, fun)
       false -> fun.(ast, to_string(expr, fun))
     end
   end
@@ -518,6 +518,11 @@ defmodule ExFormat do
     end
   end
 
+  # Interpolated charlist heredoc
+  def to_string({{:., meta, [String, :to_charlist]}, _, args} = ast, fun) when is_list(args) do
+    fun.(ast, args_to_string(args, fun))
+  end
+
   # All other calls
   def to_string({target, _, args} = ast, fun) when is_list(args) do
     if sigil = sigil_call(ast, fun) do
@@ -602,7 +607,14 @@ defmodule ExFormat do
     false
   end
 
-  defp interpolate({:<<>>, _, parts}, fun) do
+  defp interpolate({:<<>>, meta, _parts} = ast, fun) do
+    case Keyword.has_key?(meta, :format) do
+      true -> interpolate_heredoc(ast, fun)
+      false -> interpolate_string(ast, fun)
+    end
+  end
+
+  defp interpolate_string({:<<>>, _, parts}, fun) do
     parts = Enum.map_join(parts, "", fn
       {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
         "\#{" <> to_string(arg, fun) <> "}"
@@ -610,8 +622,18 @@ defmodule ExFormat do
         binary = inspect(binary, [])
         :binary.part(binary, 1, byte_size(binary) - 2)
     end)
-
+    # TODO: wrap it in to_string?
     <<?", parts::binary, ?">>
+  end
+
+  defp interpolate_heredoc({:<<>>, meta, parts}, fun) do
+    parts = Enum.map_join(parts, "", fn
+      {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
+        "\#{" <> to_string(arg, fun) <> "}"
+      binary when is_binary(binary) ->
+        binary
+    end)
+    format_literal({:__block__, meta, [parts]}, fun)
   end
 
   defp sigil_terminator(?/), do: ?/
@@ -804,10 +826,7 @@ defmodule ExFormat do
 
   defp block_to_string({:__block__, meta, [expr]}, fun) do
     ast = {:__block__, update_meta(meta), [expr]}
-    case Keyword.has_key?(meta, :format) do
-      true -> format_integer_literal(ast, fun)
-      false -> fun.(ast, to_string(expr, fun))
-    end
+    to_string(ast, fun)
   end
 
   defp block_to_string({:__block__, _, exprs}, fun) do
@@ -999,15 +1018,27 @@ defmodule ExFormat do
     :binary.part(char, 1, byte_size(char) - 2)
   end
 
-  defp format_integer_literal({:__block__, meta, [int]} = ast, fun) do
+  defp format_literal({:__block__, meta, [literal]} = ast, fun) do
     expr =
       case meta[:format] do
-        :char -> "?" <> codepoint_to_string(int)
-        :binary -> "0b" <> Integer.to_string(int, 2)
-        :octal -> "0o" <> Integer.to_string(int, 8)
-        :hexadecimal -> "0x" <> Integer.to_string(int, 16)
-        :decimal -> Integer.to_string(int) |> underscores_in_decimal()
-        _ -> Integer.to_string(int)
+        :char ->
+          "?" <> codepoint_to_string(literal)
+        :binary ->
+          "0b" <> Integer.to_string(literal, 2)
+        :octal ->
+          "0o" <> Integer.to_string(literal, 8)
+        :hexadecimal ->
+          "0x" <> Integer.to_string(literal, 16)
+        :decimal ->
+          Integer.to_string(literal) |> underscores_in_decimal()
+        :bin_heredoc ->
+          "\"\"\"\n" <> literal <> "\"\"\""
+        :list_heredoc when is_binary(literal) ->
+          "'''\n" <> literal <> "'''"
+        :list_heredoc ->
+          "'''\n" <> List.to_string(literal) <> "'''"
+        _ ->
+          literal
       end
     fun.(ast, expr)
   end
