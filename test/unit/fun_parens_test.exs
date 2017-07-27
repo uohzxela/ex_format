@@ -79,4 +79,12 @@ defmodule ExFormat.Unit.FunParensTest do
       assert_format_string("input |> fun1 |> fun2", "input |> fun1() |> fun2()\n")
     end
   end
+
+  describe "omit parentheses" do
+    test "for function calls which are prefixed with @" do
+      assert_format_string("@type expr :: {expr | atom, Keyword.t(), atom | [t]}\n")
+      assert_format_string("@split_threshold 40\n")
+      assert_format_string("@parenless_calls [:def]\n")
+    end
+  end
 end

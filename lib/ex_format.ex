@@ -73,10 +73,37 @@ defmodule ExFormat do
     end)
   end
 
+  @parenless_calls [
+    :def,
+    :defp,
+    :defmacro,
+    :defmacrop,
+    :defdelegate,
+    :defmodule,
+    :defstruct,
+    :if,
+    :quote,
+    :else,
+    :cond,
+    :use,
+    :case,
+    :import,
+    :not,
+    :alias,
+    :try,
+    :raise,
+    :spec,
+    :type,
+    :callback,
+    :reraise,
+    :defexception,
+  ]
+
   defp prepare_data(file_content) do
     lines = String.split(file_content, "\n")
     Agent.start_link(fn -> %{} end, name: :lines)
     Agent.start_link(fn -> %{} end, name: :inline_comments)
+    Agent.start_link(fn -> MapSet.new(@parenless_calls) end, name: :parenless_calls)
 
     for {line, i} <- Enum.with_index(lines) do
       update_line(i+1, String.trim(line))
@@ -480,6 +507,11 @@ defmodule ExFormat do
     fun.(ast, "not " <> to_string(arg, fun))
   end
 
+  def to_string({:@ = op, _, [{target, _, _} = arg]} = ast, fun) do
+    Agent.update(:parenless_calls, &MapSet.put(&1, target))
+    fun.(ast, Atom.to_string(op) <> to_string(arg, fun))
+  end
+
   def to_string({op, _, [arg]} = ast, fun) when op in unquote(@unary_ops) do
     fun.(ast, Atom.to_string(op) <> to_string(arg, fun))
   end
@@ -716,32 +748,6 @@ defmodule ExFormat do
     <<?:, ?", args::binary, ?">>
   end
 
-  @parenless_calls [
-    :def,
-    :defp,
-    :defmacro,
-    :defmacrop,
-    :defdelegate,
-    :defmodule,
-    :defstruct,
-    :if,
-    :quote,
-    :else,
-    :cond,
-    :use,
-    :case,
-    :import,
-    :not,
-    :alias,
-    :try,
-    :raise,
-    :spec,
-    :type,
-    :callback,
-    :reraise,
-    :defexception
-  ]
-
   defp call_to_string_with_args(target, args, fun) when target in [:with, :for, :defstruct] do
     target_string = Atom.to_string(target) <> " "
     delimiter = ",\n#{String.duplicate(" ", String.length(target_string))}"
@@ -750,16 +756,17 @@ defmodule ExFormat do
   end
 
   defp call_to_string_with_args(target, args, fun) do
-    need_parens = not target in @parenless_calls
-    target = call_to_string(target, fun)
-    args = args_to_string(args, fun)
-    if need_parens do
-      target <> "(" <> args <> ")"
-    else
-      case String.trim(args) do
-        "" -> target
-        _ -> target <> " " <> args
+    target_string = call_to_string(target, fun)
+    args_string = args_to_string(args, fun) |> String.trim
+    if Agent.get(:parenless_calls, &MapSet.member?(&1, target)) do
+      case args_string do
+        "" ->
+          target_string
+        _ ->
+          target_string <> " " <> args_string
       end
+    else
+      target_string <> "(" <> args_string <> ")"
     end
   end
 
