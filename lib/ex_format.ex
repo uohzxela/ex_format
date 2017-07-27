@@ -742,10 +742,11 @@ defmodule ExFormat do
     :defexception
   ]
 
-  defp call_to_string_with_args(target, args, fun) when target in [:with, :for] do
+  defp call_to_string_with_args(target, args, fun) when target in [:with, :for, :defstruct] do
     target_string = Atom.to_string(target) <> " "
     delimiter = ",\n#{String.duplicate(" ", String.length(target_string))}"
-    target_string <> args_to_string(args, fun, delimiter)
+    args_string = args_to_string(args, fun, delimiter) |> String.trim
+    target_string <> args_string
   end
 
   defp call_to_string_with_args(target, args, fun) do

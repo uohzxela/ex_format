@@ -101,4 +101,28 @@ defmodule ExFormat.Unit.LayoutTest do
       assert_format_string("fn -> 1 end\n")
     end
   end
+
+  describe "defstruct" do
+    test "single line defstruct" do
+      assert_format_string """
+      defstruct structs: true, binaries: :infer, charlists: :infer
+      """
+    end
+
+    test "multiline defstruct" do
+      assert_format_string """
+      defstruct structs: true,
+                binaries: :infer,
+                charlists: :infer,
+                char_lists: :infer,
+                limit: 50,
+                printable_limit: 496,
+                width: 80,
+                base: :decimal,
+                pretty: false,
+                safe: true,
+                syntax_colors: []
+      """
+    end
+  end
 end
