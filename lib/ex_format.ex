@@ -81,6 +81,7 @@ defmodule ExFormat do
     :defdelegate,
     :defmodule,
     :defstruct,
+    :defimpl,
     :if,
     :quote,
     :else,
@@ -92,9 +93,6 @@ defmodule ExFormat do
     :alias,
     :try,
     :raise,
-    :spec,
-    :type,
-    :callback,
     :reraise,
     :defexception,
   ]
@@ -269,7 +267,10 @@ defmodule ExFormat do
   defp multiline?(ast) do
     case ast do
       {:__block__, meta, [_expr]} ->
-        format(ast) =~ "\n" or (meta != [] and has_suffix_comments(meta[:line]+1))
+        format(ast) =~ "\n" or
+        (meta != [] and
+        (has_suffix_comments(meta[:line]+1) or
+         meta[:line] != meta[:prev]))
       {:__block__, _, _} ->
         true
       {_, meta, _} ->
