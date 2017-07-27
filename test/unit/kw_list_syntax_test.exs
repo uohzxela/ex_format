@@ -30,6 +30,18 @@ defmodule ExFormat.Unit.KwListSyntaxTest do
         nothing
       end
       """
+
+      assert_format_string """
+      if calendar.valid_date?(year, month, day) do
+        {:ok, :something}
+      else
+        {:error, :invalid_date}
+      end
+      """
+
+      assert_format_string """
+      if calendar.valid_date?(year, month, day), do: {:ok, :something}, else: {:error, :invalid_date}
+      """
     end
   end
 end
