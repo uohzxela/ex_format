@@ -405,7 +405,7 @@ defmodule ExFormat do
   end
 
   # Multiline-able binary ops
-  def to_string({op, _, [left, right]} = ast, fun) when op in [:<>, :++] do
+  def to_string({op, _, [left, right]} = ast, fun) when op in [:<>, :++, :and, :or] do
     {left_meta, right_meta} ={get_meta(left), get_meta(right)}
     {left_string, right_string} = {op_to_string(left, fun, op, :left), op_to_string(right, fun, op, :right)}
     string = fun.(ast, left_string <> " #{op} " <> right_string)
@@ -733,6 +733,13 @@ defmodule ExFormat do
     :import,
     :not,
     :alias,
+    :try,
+    :raise,
+    :spec,
+    :type,
+    :callback,
+    :reraise,
+    :defexception
   ]
 
   defp call_to_string_with_args(target, args, fun) when target in [:with, :for] do
