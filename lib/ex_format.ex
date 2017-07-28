@@ -289,10 +289,7 @@ defmodule ExFormat do
   end
 
   defp get_meta({_, meta, _}) do
-    case Keyword.keyword?(meta) do
-      true -> meta
-      false -> []
-    end
+    if Keyword.keyword?(meta), do: meta, else: []
   end
   defp get_meta(_), do: []
 
@@ -341,9 +338,10 @@ defmodule ExFormat do
 
   # Blocks
   def to_string({:__block__, meta, [expr]} = ast, fun) do
-    case Keyword.has_key?(meta, :format) do
-      true -> format_literal(ast, fun)
-      false -> fun.(ast, to_string(expr, fun))
+    if Keyword.has_key?(meta, :format) do
+      format_literal(ast, fun)
+    else
+      fun.(ast, to_string(expr, fun))
     end
   end
 
@@ -388,9 +386,10 @@ defmodule ExFormat do
 
   # Fn keyword
   def to_string({:fn, _, [{:->, _, [args, tuple]}] = arrow} = ast, fun) do
-    case not is_tuple(tuple) or (on_same_line?(args, tuple)) do
-      true -> fun.(ast, "fn " <> arrow_to_string(arrow, fun) <> " end")
-      false -> fun.(ast, "fn " <> block_to_string(arrow, fun) <> "\nend")
+    if not is_tuple(tuple) or (on_same_line?(args, tuple)) do
+      fun.(ast, "fn " <> arrow_to_string(arrow, fun) <> " end")
+    else
+      fun.(ast, "fn " <> block_to_string(arrow, fun) <> "\nend")
     end
   end
 
@@ -420,15 +419,12 @@ defmodule ExFormat do
       end
 
     {padding, newline} =
-      case multiline?(ast) do
-        true ->
-          token = get_first_token(get_line ctx[:prev])
-          {Enum.join(for _ <- 0..String.length(token), do: " "), "\n"}
-        false ->
-          {" ", ""}
+      if multiline?(ast) do
+        token = get_first_token(get_line ctx[:prev])
+        {Enum.join(for _ <- 0..String.length(token), do: " "), "\n"}
+      else
+        {" ", ""}
       end
-    # IO.puts op_to_string(left, fun, :when, :left)
-    # IO.puts right
     op_to_string(left, fun, :when, :left) <> newline <> fun.(ast, "#{padding}when " <> right)
   end
 
@@ -466,9 +462,10 @@ defmodule ExFormat do
   def to_string({:= = op, _, [left, right]} = ast, fun) do
     left_op_string = op_to_string(left, fun, op, :left)
     right_op_string = op_to_string(right, fun, op, :right)
-    case right_op_string =~ "\n" do
-      true -> fun.(ast, left_op_string <> adjust_new_lines(" #{op}\n" <> right_op_string, "\n  "))
-      false -> fun.(ast, left_op_string <> " #{op} " <> right_op_string)
+    if right_op_string =~ "\n" do
+      fun.(ast, left_op_string <> adjust_new_lines(" #{op}\n" <> right_op_string, "\n  "))
+    else
+      fun.(ast, left_op_string <> " #{op} " <> right_op_string)
     end
   end
 
@@ -641,9 +638,10 @@ defmodule ExFormat do
   end
 
   defp interpolate({:<<>>, meta, _parts} = ast, fun) do
-    case Keyword.has_key?(meta, :format) do
-      true -> interpolate_heredoc(ast, fun)
-      false -> interpolate_string(ast, fun)
+    if Keyword.has_key?(meta, :format) do
+      interpolate_heredoc(ast, fun)
+    else
+      interpolate_string(ast, fun)
     end
   end
 
@@ -826,9 +824,10 @@ defmodule ExFormat do
       block = adjust_new_lines block, "\n  "
       Atom.to_string(key) <> "\n  " <> block <> "\n"
     else
-      case args_in_front? do
-        true -> ", "
-        false -> " "
+      if args_in_front? do
+        ", "
+      else 
+        " "
       end <> Atom.to_string(key) <> ": " <> block
     end
   end
@@ -1013,9 +1012,10 @@ defmodule ExFormat do
 
   defp adjust_new_lines(block, replacement) do
     for <<x <- block>>, into: "" do
-      case x == ?\n do
-        true  -> replacement
-        false -> <<x>>
+      if x == ?\n do
+        replacement
+      else
+        <<x>>
       end
     end
   end
