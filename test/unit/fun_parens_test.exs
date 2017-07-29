@@ -58,6 +58,85 @@ defmodule ExFormat.Unit.FunParensTest do
     end
   end
 
+  describe "omit parentheses for calls with do block" do
+    test "quote statement" do
+      assert_format_string("quote do: something\n")
+      assert_format_string("quote(do: something)", "quote do: something\n")
+      assert_format_string """
+      quote do
+        something
+      end
+      """
+    end
+    
+    test "case statement" do
+      assert_format_string """
+      case greeting do
+        :hello ->
+          :world
+        :goodbye ->
+          :world
+      end
+      """
+    end
+
+    test "if statement" do
+      assert_format_string("if something, do: this\n")
+      assert_format_string("if something, do: this, else: that\n")
+      assert_format_string """
+      if something do
+        this
+      end
+      """
+      assert_format_string """
+      if something do
+        this
+      else
+        that
+      end
+      """
+    end
+
+    test "function definitions" do
+      assert_format_string("def f(), do: something\n")
+      assert_format_string("defp f(), do: something\n")
+      assert_format_string("defmacro f(), do: something\n")
+      assert_format_string("defmacrop f(), do: something\n")
+      assert_format_string("defmodule f(), do: something\n")
+      assert_format_string("def(f(), do: something)", "def f(), do: something\n")
+      assert_format_string """
+      def f() do
+        something
+      end
+      """
+      assert_format_string """
+      def f() do
+        something
+      catch
+        action1
+      rescue
+        action2
+      after
+        action3
+      end
+      """
+    end
+
+    test "other miscellaneous calls" do
+      assert_format_string """
+      test "something" do
+        something
+      end
+      """
+      assert_format_string """
+      cond something do
+        true ->
+          other
+      end
+      """
+    end
+  end
+
   describe "do not omit parentheses" do
     test "for remote zero-arity function calls" do
       assert_format_string("Mix.env", "Mix.env()\n")

@@ -74,20 +74,7 @@ defmodule ExFormat do
   end
 
   @parenless_calls [
-    :def,
-    :defp,
-    :defmacro,
-    :defmacrop,
-    :defdelegate,
-    :defmodule,
-    :defstruct,
-    :defimpl,
-    :if,
-    :quote,
-    :else,
-    :cond,
     :use,
-    :case,
     :import,
     :not,
     :alias,
@@ -156,7 +143,7 @@ defmodule ExFormat do
 
   defp preprocess(ast) do
     {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_meta ->
-      ast = handle_zero_arity_fun(ast)
+      ast = handle_zero_arity_fun(ast) |> handle_parenless_call()
       case ast do
         {:__block__, _, [nil]} ->
           {ast, prev_meta}
@@ -184,6 +171,15 @@ defmodule ExFormat do
   end
   defp handle_zero_arity_fun(ast), do: ast
 
+  defp handle_parenless_call({sym, _, list} = ast) when is_list(list) do
+    {_, last} = :elixir_utils.split_last(list)
+    if Keyword.keyword?(last) and Keyword.has_key?(last, :do) do
+      add_parenless_call(sym)
+    end
+    ast
+  end
+  defp handle_parenless_call(ast), do: ast
+
   defp update_meta(curr_meta) do
     curr_lineno = curr_meta[:line]
     # TODO: is suffix_newline necessary?
@@ -201,6 +197,9 @@ defmodule ExFormat do
   defp get_line(k), do: Agent.get(:lines, fn map -> Map.get(map, k) end)
   defp update_line(k, v), do: Agent.update(:lines, fn map -> Map.put(map, k, v) end)
   defp clear_line(k), do: Agent.update(:lines, fn map -> Map.put(map, k, nil) end)
+
+  defp add_parenless_call(call), do: Agent.update(:parenless_calls, &MapSet.put(&1, call))
+  defp parenless_call?(call), do: Agent.get(:parenless_calls, &MapSet.member?(&1, call))
 
   defp update_inline_comments(k, v) do
     Agent.update(:inline_comments, fn map ->
@@ -506,7 +505,7 @@ defmodule ExFormat do
   end
 
   def to_string({:@ = op, _, [{target, _, _} = arg]} = ast, fun) do
-    Agent.update(:parenless_calls, &MapSet.put(&1, target))
+    add_parenless_call(target)
     fun.(ast, Atom.to_string(op) <> to_string(arg, fun))
   end
 
@@ -757,7 +756,7 @@ defmodule ExFormat do
   defp call_to_string_with_args(target, args, fun) do
     target_string = call_to_string(target, fun)
     args_string = args_to_string(args, fun) |> String.trim
-    if Agent.get(:parenless_calls, &MapSet.member?(&1, target)) do
+    if parenless_call?(target) do
       case args_string do
         "" ->
           target_string
