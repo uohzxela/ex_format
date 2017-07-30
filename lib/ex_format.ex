@@ -305,6 +305,19 @@ defmodule ExFormat do
     end
   end
 
+  defp parenless_capture?({atom, _, _})
+       when is_atom(atom) and
+       atom not in unquote(@unary_ops) and
+       atom not in unquote(@binary_ops) do
+    true
+  end
+  defp parenless_capture?({{:., _, _}, _, _}), do: true
+  defp parenless_capture?({:__block__, _, [expr]})
+       when is_list(expr) or is_tuple(expr) do
+    true
+  end
+  defp parenless_capture?(_), do: false
+
   @doc """
   Converts the given expression to a binary.
   The given `fun` is called for every node in the AST with two arguments: the
@@ -482,7 +495,11 @@ defmodule ExFormat do
   # Capture
   def to_string({:&, _, [{:/, _, [{name, _, ctx}, arity]}]} = ast, fun)
       when is_atom(name) and is_atom(ctx) do
-    fun.(ast, "&" <> Atom.to_string(name) <> "/" <> to_string(arity, fun))
+    if name in [:&&, :&&&] do
+      fun.(ast, "&(" <> Atom.to_string(name) <> "/" <> to_string(arity, fun) <> ")")
+    else
+      fun.(ast, "&" <> Atom.to_string(name) <> "/" <> to_string(arity, fun))
+    end
   end
 
   def to_string({:&, _, [{:/, _, [{{:., _, [mod, name]}, _, []}, arity]}]} = ast, fun)
@@ -491,7 +508,11 @@ defmodule ExFormat do
   end
 
   def to_string({:&, _, [arg]} = ast, fun) when not is_integer(arg) do
-    fun.(ast, "&(" <> to_string(arg, fun) <> ")")
+    if parenless_capture?(arg) do
+      fun.(ast, "&" <> to_string(arg, fun))
+    else
+      fun.(ast, "&(" <> to_string(arg, fun) <> ")")
+    end
   end
 
   # Unary ops
