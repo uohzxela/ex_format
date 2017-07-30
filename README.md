@@ -48,8 +48,3 @@ Once inside the shell, pass any valid Elixir code to `ExFormat.format_string/1` 
 - [x] [with-indentation](https://github.com/lexmag/elixir-style-guide#with-indentation)
 - [x] [for-indentation](https://github.com/lexmag/elixir-style-guide#for-indentation)
 - [x] [hex-literals](https://github.com/lexmag/elixir-style-guide#hex-literals)
-- [ ] [module-layout](https://github.com/lexmag/elixir-style-guide#module-layout)
-- [ ] [current-module-reference](https://github.com/lexmag/elixir-style-guide#current-module-reference)
-- [ ] [defstruct-fields-default](https://github.com/lexmag/elixir-style-guide#defstruct-fields-default)
-- [ ] [exception-message](https://github.com/lexmag/elixir-style-guide#exception-message)
-- [ ] [exunit-assertion-side](https://github.com/lexmag/elixir-style-guide#exunit-assertion-side)
