@@ -24,41 +24,82 @@ defmodule ExFormat.Unit.LayoutTest do
     assert_format_string(bad, good)
   end
 
-  test "multiline expression assignment" do
-    bad = """
-    {found, not_found} = Enum.map(files, &Path.expand(&1, path))
-                         |> Enum.partition(&File.exists?/1)
-    """
+  describe "multiline expression assignment" do
+    test "assign on next line for multiline pipelines" do
+      bad = """
+      {found, not_found} = Enum.map(files, &Path.expand(&1, path))
+                           |> Enum.partition(&File.exists?/1)
+      """
+      good = """
+      {found, not_found} =
+        Enum.map(files, &(Path.expand(&1, path)))
+        |> Enum.partition(&File.exists?/1)
+      """
+      assert_format_string(bad, good)
+    end 
 
-    good = """
-    {found, not_found} =
-      Enum.map(files, &(Path.expand(&1, path)))
-      |> Enum.partition(&File.exists?/1)
-    """
+    test "assign on next line for case statements" do
+      bad = """
+      prefix = case base do
+                 :binary -> "0b"
+                 :octal -> "0o"
+                 :hex -> "0x"
+               end
+      """
+      good = """
+      prefix =
+        case base do
+          :binary ->
+            "0b"
+          :octal ->
+            "0o"
+          :hex ->
+            "0x"
+        end
+      """
+      assert_format_string(bad, good)
+    end
 
-    assert_format_string(bad, good)
+    test "assign on next line for if else statements" do
+      assert_format_string """
+      foo =
+        if true do
+          this
+        else
+          that
+        end
+      """
+    end
 
-    bad = """
-    prefix = case base do
-               :binary -> "0b"
-               :octal -> "0o"
-               :hex -> "0x"
-             end
-    """
+    test "assign on next line for cond statements" do
+      assert_format_string """
+      foo =
+        cond bar do
+          test?(bar) ->
+            this
+          true ->
+            that
+        end
+      """
+    end
 
-    good = """
-    prefix =
-      case base do
-        :binary ->
-          "0b"
-        :octal ->
-          "0o"
-        :hex ->
-          "0x"
-      end
-    """
+    test "do not assign on next line for multiline maps" do
+      assert_format_string """
+      map = %{
+        a: 1,
+        b: 2,
+      }
+      """
+    end
 
-    assert_format_string(bad, good)
+    test "do not assign on next line for multiline keyword lists" do
+      assert_format_string """
+      kw_list = [
+        a: 1,
+        b: 2,
+      ]
+      """
+    end
   end
 
   describe "anonymous function indentation" do

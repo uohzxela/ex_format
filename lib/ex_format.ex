@@ -319,6 +319,17 @@ defmodule ExFormat do
     end
   end
 
+  defp assign_on_next_line?(ast) do
+    case ast do
+      {:%{}, _, _} ->
+        false
+      {:__block__, _, [list]} when is_list(list) ->
+        not Keyword.keyword?(list)
+      _ ->
+        true
+    end
+  end
+
   defp parenless_capture?({atom, _, _})
        when is_atom(atom) and
        atom not in unquote(@unary_ops) and
@@ -488,7 +499,7 @@ defmodule ExFormat do
   def to_string({:= = op, _, [left, right]} = ast, fun) do
     left_op_string = op_to_string(left, fun, op, :left)
     right_op_string = op_to_string(right, fun, op, :right)
-    if right_op_string =~ "\n" do
+    if assign_on_next_line?(right) and right_op_string =~ "\n" do
       fun.(ast, left_op_string <> adjust_new_lines(" #{op}\n" <> right_op_string, "\n  "))
     else
       fun.(ast, left_op_string <> " #{op} " <> right_op_string)
