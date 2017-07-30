@@ -46,6 +46,8 @@ defmodule ExFormat do
 
   @split_threshold 80
 
+  @ampersand_operators [:&, :&&, :&&&]
+
   def format_file(file_name) do
     file_name
     |> File.read!
@@ -336,7 +338,10 @@ defmodule ExFormat do
        atom not in unquote(@binary_ops) do
     true
   end
-  defp parenless_capture?({{:., _, _}, _, _}), do: true
+  defp parenless_capture?({{:., _, args}, _, _} = ast) do
+    {sym, _, _} = List.first(args)
+    sym not in @ampersand_operators
+  end
   defp parenless_capture?({:__block__, _, [expr]})
        when is_list(expr) or is_tuple(expr) do
     true
@@ -520,7 +525,7 @@ defmodule ExFormat do
   # Capture
   def to_string({:&, _, [{:/, _, [{name, _, ctx}, arity]}]} = ast, fun)
       when is_atom(name) and is_atom(ctx) do
-    if name in [:&&, :&&&] do
+    if name in @ampersand_operators do
       fun.(ast, "&(" <> Atom.to_string(name) <> "/" <> to_string(arity, fun) <> ")")
     else
       fun.(ast, "&" <> Atom.to_string(name) <> "/" <> to_string(arity, fun))

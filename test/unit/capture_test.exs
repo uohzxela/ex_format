@@ -31,5 +31,9 @@ defmodule ExFormat.Unit.CaptureTest do
       assert_format_string("&(&&&/2)\n")
       assert_format_string("& &&&/2", "&(&&&/2)\n")
     end
+
+    test "anonymous function argument call" do
+      assert_format_string("&(&1.())\n")
+    end
   end
 end
