@@ -1081,7 +1081,13 @@ defmodule ExFormat do
 
   defp codepoint_to_string(int) do
     char = List.to_string([int]) |> inspect([])
-    :binary.part(char, 1, byte_size(char) - 2)
+    char_string = :binary.part(char, 1, byte_size(char) - 2)
+    # Special-case some escape codes
+    case char_string do
+      "\s" -> "\\s"
+      "<0>" -> "\\0"
+      _ -> char_string
+    end
   end
 
   defp format_literal({:__block__, meta, [literal]} = ast, fun) do

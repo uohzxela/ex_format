@@ -32,8 +32,19 @@ defmodule ExFormat.Unit.LiteralTest do
     test "char representation" do
       assert_format_string("?è\n")
       assert_format_string("?4\n")
+
+      # Escape codes
+      assert_format_string("?\\a\n")
+      assert_format_string("?\\b\n")
+      assert_format_string("?\\d\n")
+      assert_format_string("?\\e\n")
+      assert_format_string("?\\f\n")
       assert_format_string("?\\n\n")
+      assert_format_string("?\\r\n")
+      assert_format_string("?\\s\n")
       assert_format_string("?\\t\n")
+      assert_format_string("?\\v\n")
+      assert_format_string("?\\0\n")
 
       assert_format_string """
       defp sigil_terminator(?/), do: ?/
