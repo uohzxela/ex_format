@@ -140,6 +140,8 @@ defmodule ExFormat.Unit.FunParensTest do
   describe "do not omit parentheses" do
     test "for remote zero-arity function calls" do
       assert_format_string("Mix.env", "Mix.env()\n")
+      assert_format_string("Foo.Bar.baz", "Foo.Bar.baz()\n")
+      assert_format_string(":foo.bar", ":foo.bar()\n")
     end
 
     test "for one-arity function calls in pipelines" do
@@ -157,6 +159,10 @@ defmodule ExFormat.Unit.FunParensTest do
 
       assert_format_string("input |> fun1 |> fun2", "input |> fun1() |> fun2()\n")
     end
+
+    test "for n-arity variable.call" do
+      assert_format_string("foo.bar(1, 2)\n")
+    end
   end
 
   describe "omit parentheses" do
@@ -164,6 +170,11 @@ defmodule ExFormat.Unit.FunParensTest do
       assert_format_string("@type expr :: {expr | atom, Keyword.t(), atom | [t]}\n")
       assert_format_string("@split_threshold 40\n")
       assert_format_string("@parenless_calls [:def]\n")
+    end
+
+    test "for 0-arity variable.call" do
+      assert_format_string("variable.call\n")
+      assert_format_string("map.key.inner_key\n")
     end
   end
 end

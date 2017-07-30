@@ -199,7 +199,21 @@ defmodule ExFormat do
   defp clear_line(k), do: Agent.update(:lines, fn map -> Map.put(map, k, nil) end)
 
   defp add_parenless_call(call), do: Agent.update(:parenless_calls, &MapSet.put(&1, call))
-  defp parenless_call?(call), do: Agent.get(:parenless_calls, &MapSet.member?(&1, call))
+
+  defp parenless_call?(call, _args) when is_atom(call) do
+    Agent.get(:parenless_calls, &MapSet.member?(&1, call))
+  end
+  defp parenless_call?({:., _, [left, right]}, args) do
+    case left do
+      {:__aliases__, _, _} ->
+        false
+      {:__block__, _, [expr]} when is_atom(expr) ->
+        false
+      _ ->
+        args == []
+    end
+  end
+  defp parenless_call?(_, _), do: false
 
   defp update_inline_comments(k, v) do
     Agent.update(:inline_comments, fn map ->
@@ -777,7 +791,7 @@ defmodule ExFormat do
   defp call_to_string_with_args(target, args, fun) do
     target_string = call_to_string(target, fun)
     args_string = args_to_string(args, fun) |> String.trim
-    if parenless_call?(target) do
+    if parenless_call?(target, args) do
       case args_string do
         "" ->
           target_string
