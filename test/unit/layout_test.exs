@@ -13,7 +13,7 @@ defmodule ExFormat.Unit.LayoutTest do
     """
 
     good = """
-    module = env.module()
+    module = env.module
     arity = length(args)
 
     def inspect(false), do: "false"
