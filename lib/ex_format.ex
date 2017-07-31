@@ -782,14 +782,9 @@ defmodule ExFormat do
 
   defp call_to_string_with_args(target, args, fun) do
     target_string = call_to_string(target, fun)
-    args_string = args_to_string(args, fun) |> String.trim
+    args_string = args_to_string(args, fun)
     if parenless_call?(target, args) do
-      case args_string do
-        "" ->
-          target_string
-        _ ->
-          target_string <> " " <> args_string
-      end
+      (target_string <> " " <> args_string) |> String.trim()
     else
       target_string <> "(" <> args_string <> ")"
     end
