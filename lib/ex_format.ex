@@ -48,33 +48,6 @@ defmodule ExFormat do
 
   @ampersand_operators [:&, :&&, :&&&]
 
-  def format_file(file_name) do
-    file_name
-    |> File.read!
-    |> format_string
-  end
-
-  def format_string(content) do
-    content
-    |> prepare_data
-    |> preprocess
-    |> format
-    |> postprocess
-  end
-
-  defp format(ast) do
-    to_string(ast, fn ast, string ->
-      case ast do
-        # {:__block__, ctx, [nil]} ->
-        #   String.trim ctx[:suffix_comments]
-        {_, meta, _} ->
-          Enum.join [meta[:prefix_comments], meta[:prefix_newline], string, meta[:suffix_comments]]
-        _ ->
-          string
-      end
-    end)
-  end
-
   @parenless_calls [
     :use,
     :import,
@@ -85,6 +58,14 @@ defmodule ExFormat do
     :reraise,
     :defexception,
   ]
+
+  def format_string(content) do
+    content
+    |> prepare_data()
+    |> preprocess()
+    |> format()
+    |> postprocess()
+  end
 
   defp prepare_data(file_content) do
     lines = String.split(file_content, "\n")
@@ -109,6 +90,43 @@ defmodule ExFormat do
     ast
   end
 
+  defp preprocess(ast) do
+    {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_meta ->
+      ast = handle_zero_arity_fun(ast) |> handle_parenless_call()
+      case ast do
+        {:__block__, _, [nil]} ->
+          {ast, prev_meta}
+        {sym, curr_meta, args} ->
+          if curr_meta != [] and prev_meta != [] do
+            new_meta = update_meta(curr_meta, prev_meta)
+            {{sym, new_meta, args}, new_meta}
+          else
+            {ast, prev_meta}
+          end
+        _ ->
+          {ast, prev_meta}
+      end
+    end)
+    # IO.inspect ast
+    ast
+  end
+
+  defp format(ast) do
+    fun = fn ast, string ->
+      case ast do
+        {_, meta, _} ->
+          Enum.join [
+            meta[:prefix_comments],
+            meta[:prefix_newline],
+            string, meta[:suffix_comments]
+          ]
+        _ ->
+          string
+      end
+    end
+    to_string(ast, fun)
+  end
+
   defp postprocess(formatted) do
     formatted_lines = String.split(formatted, "\n")
     formatted = Enum.map_join(formatted_lines, "\n", fn line ->
@@ -116,7 +134,6 @@ defmodule ExFormat do
       fingerprint = get_line_fingerprint line
       line <> get_inline_comments(fingerprint)
     end)
-    # IO.puts formatted
     formatted <> "\n"
   end
 
@@ -142,27 +159,6 @@ defmodule ExFormat do
   defp get_lineno(token) do
     {lineno, _, _} = elem(token, 1)
     lineno
-  end
-
-  defp preprocess(ast) do
-    {ast, _} = Macro.prewalk(ast, [line: 1], fn ast, prev_meta ->
-      ast = handle_zero_arity_fun(ast) |> handle_parenless_call()
-      case ast do
-        {:__block__, _, [nil]} ->
-          {ast, prev_meta}
-        {sym, curr_meta, args} ->
-          if curr_meta != [] and prev_meta != [] do
-            new_meta = update_meta(curr_meta, prev_meta)
-            {{sym, new_meta, args}, new_meta}
-          else
-            {ast, prev_meta}
-          end
-        _ ->
-          {ast, prev_meta}
-      end
-    end)
-    # IO.inspect ast
-    ast
   end
 
   @defs [:def, :defp, :defmacro, :defmacrop, :defdelegate]
