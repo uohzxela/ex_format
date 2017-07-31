@@ -167,7 +167,7 @@ defmodule ExFormat.Unit.FunParensTest do
 
   describe "omit parentheses" do
     test "for function calls which are prefixed with @" do
-      assert_format_string("@type expr :: {expr | atom, Keyword.t(), atom | [t]}\n")
+      assert_format_string("@type expr :: {expr | atom, Keyword.t, atom | [t]}\n")
       assert_format_string("@split_threshold 40\n")
       assert_format_string("@parenless_calls [:def]\n")
     end
@@ -175,6 +175,20 @@ defmodule ExFormat.Unit.FunParensTest do
     test "for 0-arity variable.call" do
       assert_format_string("variable.call\n")
       assert_format_string("map.key.inner_key\n")
+    end
+
+    test "for 0-arity types" do
+      assert_format_string("@spec start_link(module, term, Keyword.t) :: on_start\n")
+      assert_format_string("@type number_with_remark :: {number, String.t}\n")
+      assert_format_string("@spec make_quiet(LousyCalculator.number_with_remark) :: number\n")
+      assert_format_string """
+      @spec add(number, number) :: number
+      @spec multiply(number, number) :: number_with_remark
+      """
+
+      bad = "@spec start_link(module(), term(), Keyword.t()) :: on_start()"
+      good = "@spec start_link(module, term, Keyword.t) :: on_start\n"
+      assert_format_string(bad, good)
     end
   end
 end

@@ -91,6 +91,7 @@ defmodule ExFormat do
     Agent.start_link(fn -> %{} end, name: :lines)
     Agent.start_link(fn -> %{} end, name: :inline_comments)
     Agent.start_link(fn -> MapSet.new(@parenless_calls) end, name: :parenless_calls)
+    Agent.start_link(fn -> false end, name: :parenless_zero_arity)
 
     for {line, i} <- Enum.with_index(lines) do
       update_line(i+1, String.trim(line))
@@ -201,21 +202,23 @@ defmodule ExFormat do
   defp clear_line(k), do: Agent.update(:lines, fn map -> Map.put(map, k, nil) end)
 
   defp add_parenless_call(call), do: Agent.update(:parenless_calls, &MapSet.put(&1, call))
+  def parenless_zero_arity?(args), do: Agent.get(:parenless_zero_arity, &(&1)) and args == []
 
-  defp parenless_call?(call, _args) when is_atom(call) do
-    Agent.get(:parenless_calls, &MapSet.member?(&1, call))
+  defp parenless_call?(call, args) when is_atom(call) do
+    Agent.get(:parenless_calls, &MapSet.member?(&1, call)) or
+    parenless_zero_arity?(args)
   end
   defp parenless_call?({:., _, [left, _right]}, args) do
     case left do
       {:__aliases__, _, _} ->
-        false
+        false or parenless_zero_arity?(args)
       {:__block__, _, [expr]} when is_atom(expr) ->
-        false
+        false or parenless_zero_arity?(args)
       _ ->
         args == []
     end
   end
-  defp parenless_call?(_, _), do: false
+  defp parenless_call?(_, args), do: false or parenless_zero_arity?(args)
 
   defp update_inline_comments(k, v) do
     Agent.update(:inline_comments, fn map ->
@@ -509,6 +512,16 @@ defmodule ExFormat do
     else
       fun.(ast, left_op_string <> " #{op} " <> right_op_string)
     end
+  end
+
+  # Spec op
+  def to_string({::: = op, _, [left, right]} = ast, fun) do
+    # Enforce parenless zero arity calls when formatting @spec or @type
+    Agent.update(:parenless_zero_arity, fn _ -> true end)
+    left = op_to_string(left, fun, op, :left)
+    right = op_to_string(right, fun, op, :right)
+    Agent.update(:parenless_zero_arity, fn _ -> false end)
+    fun.(ast, left <> " #{op} " <> right)
   end
 
   # Binary ops
