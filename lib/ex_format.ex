@@ -211,14 +211,14 @@ defmodule ExFormat do
   defp parenless_call?({:., _, [left, _right]}, args) do
     case left do
       {:__aliases__, _, _} ->
-        false or parenless_zero_arity?(args)
+        parenless_zero_arity?(args)
       {:__block__, _, [expr]} when is_atom(expr) ->
-        false or parenless_zero_arity?(args)
+        parenless_zero_arity?(args)
       _ ->
         args == []
     end
   end
-  defp parenless_call?(_, args), do: false or parenless_zero_arity?(args)
+  defp parenless_call?(_, args), do: parenless_zero_arity?(args)
 
   defp update_inline_comments(k, v) do
     Agent.update(:inline_comments, fn map ->
