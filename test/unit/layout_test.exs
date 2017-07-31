@@ -100,6 +100,24 @@ defmodule ExFormat.Unit.LayoutTest do
       ]
       """
     end
+
+    test "do not assign on next line for multiline lists" do
+      assert_format_string """
+      children = [
+        MyApp.Repo,
+        MyApp.Endpoint,
+      ]
+      """
+    end
+
+    test "do not assign on next line for multiline tuples" do
+      assert_format_string """
+      tuple = {
+        MyApp.Repo,
+        MyApp.Endpoint,
+      }
+      """
+    end
   end
 
   describe "anonymous function indentation" do

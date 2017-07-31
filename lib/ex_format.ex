@@ -325,8 +325,8 @@ defmodule ExFormat do
     case ast do
       {:%{}, _, _} ->
         false
-      {:__block__, _, [list]} when is_list(list) ->
-        not Keyword.keyword?(list)
+      {:__block__, _, [expr]} when is_list(expr) or is_tuple(expr) ->
+        false
       _ ->
         true
     end
