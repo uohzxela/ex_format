@@ -90,4 +90,8 @@ defmodule ExFormat.Unit.MapTest do
       assert_format_string(bad, good)
     end
   end
+
+  test "map is not initialized with keyword list" do
+    assert_format_string("%File.Stat{unquote_splicing(pairs)}\n")
+  end
 end

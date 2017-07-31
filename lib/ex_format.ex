@@ -959,8 +959,11 @@ defmodule ExFormat do
   end
 
   defp map_list_to_string(list, fun) do
-    list_string = Enum.map_join(list, ", ", fn {key, value} ->
-      to_string(key, fun) <> " => " <> to_string(value, fun)
+    list_string = Enum.map_join(list, ", ", fn
+      {key, value} ->
+        to_string(key, fun) <> " => " <> to_string(value, fun)
+      value ->
+        to_string(value, fun)
     end)
     if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
       map_list_to_multiline_string(list, fun)
