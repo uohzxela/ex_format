@@ -205,7 +205,7 @@ defmodule ExFormat do
   defp parenless_call?(call, _args) when is_atom(call) do
     Agent.get(:parenless_calls, &MapSet.member?(&1, call))
   end
-  defp parenless_call?({:., _, [left, right]}, args) do
+  defp parenless_call?({:., _, [left, _right]}, args) do
     case left do
       {:__aliases__, _, _} ->
         false
@@ -338,7 +338,7 @@ defmodule ExFormat do
        atom not in unquote(@binary_ops) do
     true
   end
-  defp parenless_capture?({{:., _, args}, _, _} = ast) do
+  defp parenless_capture?({{:., _, args}, _, _}) do
     {sym, _, _} = List.first(args)
     sym not in @ampersand_operators
   end
@@ -574,32 +574,8 @@ defmodule ExFormat do
     fun.(ast, to_string(left, fun) <> to_string([right], fun))
   end
 
-  @doc_keywords [:doc, :moduledoc]
-
-  # Doc comments
-  def to_string({doc, _, [docstring]}, fun) when doc in @doc_keywords do
-    doc = Atom.to_string(doc)
-
-    # unwrap literal in block
-    docstring = case docstring do
-      {:__block__, _, [docstring]} -> docstring
-      _ -> docstring
-    end
-
-    if is_atom(docstring) do
-      doc <> " " <> to_string(docstring)
-    else
-      if sigil = sigil_call(docstring, fun) do
-        doc <> " " <> sigil
-      else
-        # TODO: is single quote heredoc necessary?
-        doc <> " \"\"\"\n" <> docstring <> "\"\"\""
-      end
-    end
-  end
-
   # Interpolated charlist heredoc
-  def to_string({{:., meta, [String, :to_charlist]}, _, args} = ast, fun) when is_list(args) do
+  def to_string({{:., _, [String, :to_charlist]}, _, args} = ast, fun) when is_list(args) do
     fun.(ast, args_to_string(args, fun))
   end
 

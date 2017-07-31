@@ -187,6 +187,14 @@ defmodule ExFormat.Unit.CommentTest do
       """
     end
 
+    test "for @typedoc" do
+      assert_format_string """
+      @typedoc \"\"\"
+      Just a number followed by a string.
+      \"\"\"
+      """
+    end
+
     test "with false" do
       assert_format_string("@doc false\n")
       assert_format_string("@moduledoc false\n")
