@@ -175,7 +175,7 @@ defmodule ExFormat do
     {_, last} = :elixir_utils.split_last(list)
     state =
       if Keyword.keyword?(last) and Keyword.has_key?(last, :do) do
-        put_in(state.parenless_calls, MapSet.put(state.parenless_calls, sym))
+        %{state | parenless_calls: MapSet.put(state.parenless_calls, sym)}
       else
         state
       end
@@ -521,7 +521,7 @@ defmodule ExFormat do
 
   # Spec op
   def to_string({::: = op, _, [left, right]} = ast, fun, state) do
-    state = put_in(state.parenless_zero_arity?, true)
+    state = %{state | parenless_zero_arity?: true}
     left = op_to_string(left, fun, op, :left, state)
     right = op_to_string(right, fun, op, :right, state)
     fun.(ast, left <> " #{op} " <> right)
@@ -572,7 +572,7 @@ defmodule ExFormat do
   end
 
   def to_string({:@ = op, _, [{target, _, _} = arg]} = ast, fun, state) do
-    state = put_in(state.parenless_calls, MapSet.put(state.parenless_calls, target))
+    state = %{state | parenless_calls: MapSet.put(state.parenless_calls, target)}
     fun.(ast, Atom.to_string(op) <> to_string(arg, fun, state))
   end
 
