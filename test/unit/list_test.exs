@@ -74,7 +74,7 @@ defmodule ExFormat.Unit.ListTest do
       assert_format_string(bad, good)
     end
 
-    test "with a complex example" do
+    test "with complex examples" do
       bad = """
       defp deps do
         [
@@ -103,6 +103,22 @@ defmodule ExFormat.Unit.ListTest do
       end
       """
       assert_format_string(bad, good)
+
+      assert_format_string """
+      defstruct [
+        # The TCP socket that holds the connection to Redis
+        socket: nil,
+        # Options passed when the connection is started
+        opts: nil,
+        # The receiver process
+        receiver: nil,
+        # The shared state store process
+        shared_state: nil,
+        # The current backoff (used to compute the next backoff when reconnecting
+        # with exponential backoff)
+        backoff_current: nil,
+      ]
+      """
     end
   end
 end

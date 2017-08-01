@@ -96,19 +96,7 @@ defmodule ExFormat do
     {ast, {_, state}} =
       Macro.prewalk(ast, {[line: 1], state}, fn ast, {prev_meta, state} ->
         {ast, state} = handle_zero_arity_fun(ast) |> handle_parenless_call(state)
-        case ast do
-          {:__block__, _, [nil]} ->
-            {ast, {prev_meta, state}}
-          {sym, curr_meta, args} ->
-            if curr_meta != [] and prev_meta != [] do
-              new_meta = update_meta(curr_meta, prev_meta)
-              {{sym, new_meta, args}, {new_meta, state}}
-            else
-              {ast, {prev_meta, state}}
-            end
-          _ ->
-            {ast, {prev_meta, state}}
-        end
+        handle_accumulator(ast, prev_meta, state)
       end)
     {ast, state}
   end
@@ -137,6 +125,19 @@ defmodule ExFormat do
       line <> get_inline_comments(fingerprint)
     end)
     formatted <> "\n"
+  end
+
+  defp handle_accumulator({sym, curr_meta, args} = ast, prev_meta, state) do
+    if curr_meta != [] and prev_meta != [] do
+      new_meta = update_meta(curr_meta, prev_meta)
+      {{sym, new_meta, args}, {new_meta, state}}
+    else
+      {ast, {prev_meta, state}}
+    end
+  end
+
+  defp handle_accumulator(ast, prev_meta, state) do
+    {ast, {prev_meta, state}}
   end
 
   defp extract_inline_comment_token(line) do
