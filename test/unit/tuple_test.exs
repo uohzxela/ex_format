@@ -96,4 +96,19 @@ defmodule ExFormat.Unit.TupleTest do
       assert_format_string(bad, good)
     end
   end
+
+  describe "tuple calls" do
+    test "with arguments on same line" do
+      assert_format_string("alias Foo.{Bar, Baz}\n")
+    end
+
+    test "with arguments on multiple lines" do
+      assert_format_string """
+      alias Foo.{
+        Bar,
+        Baz,
+      }
+      """
+    end
+  end
 end

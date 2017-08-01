@@ -596,6 +596,12 @@ defmodule ExFormat do
     fun.(ast, args_to_string(args, fun, state))
   end
 
+  # foo.{bar, baz}
+  def to_string({{:., _, [left, :{}]}, _, args} = ast, fun, state) do
+    tupleized = {:{}, [], args}
+    fun.(ast, to_string(left, fun, state) <> "." <> to_string(tupleized, fun, state))
+  end
+
   # All other calls
   def to_string({target, _, args} = ast, fun, state) when is_list(args) do
     if sigil = sigil_call(ast, fun, state) do
