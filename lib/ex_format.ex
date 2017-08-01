@@ -57,6 +57,7 @@ defmodule ExFormat do
     :raise,
     :reraise,
     :defexception,
+    :require
   ]
 
   def format_string(content) do

@@ -190,5 +190,13 @@ defmodule ExFormat.Unit.FunParensTest do
       good = "@spec start_link(module, term, Keyword.t) :: on_start\n"
       assert_format_string(bad, good)
     end
+
+    test "hardcoded parenless function calls" do
+      assert_format_string("use Logger\n")
+      assert_format_string("import Logger\n")
+      assert_format_string("raise EEx.SyntaxError\n")
+      assert_format_string("require Logger\n")
+      assert_format_string("alias MyHelpers, as: My\n")
+    end
   end
 end
