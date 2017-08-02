@@ -1068,6 +1068,8 @@ defmodule ExFormat do
     end
   end
 
+  # Only underscore decimals that have six or more digits
+  defp underscores_in_decimal(string) when byte_size(string) < 6, do: string
   defp underscores_in_decimal(string) do
     string
     |> String.reverse()
