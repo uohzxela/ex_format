@@ -118,6 +118,15 @@ defmodule ExFormat.Unit.LayoutTest do
       }
       """
     end
+
+    test "do not assign on next line for multiline structs" do
+      assert_format_string """
+      foo = %User{
+        age: 27,
+        name: "John",
+      }
+      """
+    end
   end
 
   describe "anonymous function indentation" do

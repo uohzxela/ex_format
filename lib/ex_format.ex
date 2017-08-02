@@ -327,7 +327,9 @@ defmodule ExFormat do
 
   defp assign_on_next_line?(ast) do
     case ast do
-      {:%{}, _, _} ->
+      {:%, _, [_structname, _map]} ->
+        false
+       {:%{}, _, _} ->
         false
       {:__block__, _, [expr]} when is_list(expr) or is_tuple(expr) ->
         false
