@@ -428,7 +428,15 @@ defmodule ExFormat do
 
   # Tuple containers
   def to_string({:{}, _, args} = ast, fun, state) do
-    tuple = "{" <> tuple_to_string(args, fun, state) <> "}"
+    inside_list? = Map.get(state, :inside_list?)
+    tuple =
+      # Enforce keyword syntax for tuples of size 2 inside list
+      if inside_list? == true and length(args) == 2 do
+        [k, v] = args
+        kw_list_to_string([{k, v}], fun, state)
+      else
+        "{" <> tuple_to_string(args, fun, state) <> "}"
+      end
     fun.(ast, tuple)
   end
 
@@ -972,6 +980,7 @@ defmodule ExFormat do
   end
 
   defp list_to_string(list, fun, state) do
+    state = Map.put(state, :inside_list?, true)
     list_string = Enum.map_join(list, ", ", &to_string(&1, fun, state))
     if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
       list_to_multiline_string(list, fun, state)
@@ -988,12 +997,22 @@ defmodule ExFormat do
     "\n  " <> list_string <> ",\n"
   end
 
-  defp kw_list_to_string(list, fun, state) do
-    list_string = Enum.map_join(list, ", ", fn {key, value} ->
-      atom_name = case Inspect.Atom.inspect(key) do
+  defp kw_list_to_string([{key, value}], fun, state) when not is_atom(key) do
+    atom_name =
+      case to_string(key, fun, state) do
         ":" <> rest -> rest
         other       -> other
       end
+    atom_name <> ": " <> to_string(value, fn(_ast, string) -> string end, state)
+  end
+
+  defp kw_list_to_string(list, fun, state) do
+    list_string = Enum.map_join(list, ", ", fn {key, value} ->
+      atom_name =
+        case Inspect.Atom.inspect(key) do
+          ":" <> rest -> rest
+          other       -> other
+        end
       atom_name <> ": " <> to_string(value, fn(_ast, string) -> string end, state)
     end)
     if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
