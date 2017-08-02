@@ -92,13 +92,13 @@ defmodule ExFormat.Unit.ListTest do
       defp deps() do
         [
           # Web server
-          {:cowboy, "~> 1.0"},
+          cowboy: "~> 1.0",
           # Web framework
-          {:phoenix, "~> 1.3.0-rc"},
+          phoenix: "~> 1.3.0-rc",
           # XML parser helper
-          {:sweet_xml, "~> 0.6"},
+          sweet_xml: "~> 0.6",
           # Statsd metrics sink client
-          {:statix, "~> 1.0"},
+          statix: "~> 1.0",
         ]
       end
       """

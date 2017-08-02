@@ -67,10 +67,9 @@ defmodule ExFormat.Unit.IndentationTest do
       [{:prefix_newline, get_prefix_newline(curr_lineno-1, prev_lineno)}] ++ curr_ctx
       """
       good = """
-      [{:prev, prev_lineno}] ++
-      [{:prefix_comments, get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
-      [{:prefix_newline, get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
-      curr_ctx
+      [prev: prev_lineno] ++
+      [prefix_comments: get_prefix_comments(curr_lineno - 1, prev_lineno)] ++
+      [prefix_newline: get_prefix_newline(curr_lineno - 1, prev_lineno)] ++ curr_ctx
       """
       assert_format_string(bad, good)
     end
