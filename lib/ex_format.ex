@@ -78,6 +78,7 @@ defmodule ExFormat do
       parenless_calls: MapSet.new(@parenless_calls),
       parenless_zero_arity?: false,
       in_spec: nil,
+      in_tuple?: false,
     }
     for {line, i} <- Enum.with_index(lines) do
       update_line(i+1, String.trim(line))
@@ -430,6 +431,7 @@ defmodule ExFormat do
 
   # Tuple containers
   def to_string({:{}, _, args} = ast, fun, state) do
+    state = %{state | in_tuple?: true}
     tuple = "{" <> tuple_to_string(args, fun, state) <> "}"
     fun.(ast, tuple)
   end
@@ -665,7 +667,11 @@ defmodule ExFormat do
         {escaped, _} = Inspect.BitString.escape(IO.chardata_to_string(list), ?')
         IO.iodata_to_binary [?', escaped, ?']
       Inspect.List.keyword?(list) ->
-        "[" <> kw_list_to_string(list, fun, state) <> "]"
+        if state.in_tuple? do
+          kw_list_to_string(list, fun, state)
+        else
+          "[" <> kw_list_to_string(list, fun, state) <> "]"
+        end
       true ->
         "[" <> list_to_string(list, fun, state) <> "]"
     end)
