@@ -156,5 +156,10 @@ defmodule ExFormat.Unit.KeywordListTest do
       """
       assert_format_string(bad, good)
     end
+
+    test "do not parenthesize keyword list in tuple" do
+      assert_format_string("{foo, bar, baz: :bong}\n")
+      assert_format_string("{foo, bar, [baz: :bong]}", "{foo, bar, baz: :bong}\n")
+    end
   end
 end
