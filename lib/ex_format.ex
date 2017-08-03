@@ -354,6 +354,17 @@ defmodule ExFormat do
   end
   defp parenless_capture?(_), do: false
 
+  defp handle_left_spec_op({target, meta, args} = left, state) do
+    cond do
+      Map.get(state, :type_spec?) == true and args == [] ->
+        {target, meta, nil}
+      Map.get(state, :fun_spec?) == true and args == nil ->
+        {target, meta, []}
+      true ->
+        left
+    end
+  end
+
   @doc """
   Converts the given expression to a binary.
   The given `fun` is called for every node in the AST with two arguments: the
@@ -525,9 +536,16 @@ defmodule ExFormat do
 
   # Spec op
   def to_string({::: = op, _, [left, right]} = ast, fun, state) do
-    state = %{state | parenless_zero_arity?: true}
-    left = op_to_string(left, fun, op, :left, state)
-    right = op_to_string(right, fun, op, :right, state)
+    # Strip parens for all 0-arity terms (in this context, they are types)
+    new_state = %{state | parenless_zero_arity?: true}
+    left =
+      case handle_left_spec_op(left, state) do
+        {_, _, []} = left ->
+          op_to_string(left, fun, op, :left, state)
+        _ ->
+          op_to_string(left, fun, op, :left, new_state)
+      end
+    right = op_to_string(right, fun, op, :right, new_state)
     fun.(ast, left <> " #{op} " <> right)
   end
 
@@ -575,8 +593,20 @@ defmodule ExFormat do
     fun.(ast, "not " <> to_string(arg, fun, state))
   end
 
+  @type_spec_calls [:type, :typep, :opaque]
+  @fun_spec_calls [:spec, :callback, :macrocallback]
+  # Strip parens for calls prefixed with @
   def to_string({:@ = op, _, [{target, _, _} = arg]} = ast, fun, state) do
     state = %{state | parenless_calls: MapSet.put(state.parenless_calls, target)}
+    state =
+      cond do
+        target in @type_spec_calls ->
+          Map.put(state, :type_spec?, true)
+        target in @fun_spec_calls ->
+          Map.put(state, :fun_spec?, true)
+        true ->
+          state
+      end
     fun.(ast, Atom.to_string(op) <> to_string(arg, fun, state))
   end
 
@@ -873,7 +903,7 @@ defmodule ExFormat do
     else
       if args_in_front? do
         ", "
-      else 
+      else
         " "
       end <> Atom.to_string(key) <> ": " <> block
     end
