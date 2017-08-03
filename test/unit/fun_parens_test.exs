@@ -205,12 +205,14 @@ defmodule ExFormat.Unit.FunParensTest do
       assert_format_string("@opaque foo :: number\n")
     end
 
-    test "hardcoded parenless function calls" do
+    test "do not parenthesize some special function calls" do
       assert_format_string("use Logger\n")
       assert_format_string("import Logger\n")
       assert_format_string("raise EEx.SyntaxError\n")
       assert_format_string("require Logger\n")
       assert_format_string("alias MyHelpers, as: My\n")
+      assert_format_string("defoverridable EEx.Engine\n")
+      assert_format_string("assert foo == bar\n")
     end
   end
 end

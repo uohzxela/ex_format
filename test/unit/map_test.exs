@@ -74,7 +74,7 @@ defmodule ExFormat.Unit.MapTest do
       good = """
       defmodule MyMod do
         def myfunc() do
-          assert(result == %{
+          assert result == %{
             very_long_key_very_long_key1: 1,
             very_long_key_very_long_key2: 2,
             very_long_key_very_long_key3: 3,
@@ -83,7 +83,7 @@ defmodule ExFormat.Unit.MapTest do
               "nested data structure",
               "nested data structure",
             ],
-          })
+          }
         end
       end
       """
