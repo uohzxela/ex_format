@@ -75,6 +75,7 @@ defmodule ExFormat do
     state = %{
       parenless_calls: MapSet.new(@parenless_calls),
       parenless_zero_arity?: false,
+      inside_list?: false,
       in_spec: nil,
     }
     for {line, i} <- Enum.with_index(lines) do
@@ -428,10 +429,9 @@ defmodule ExFormat do
 
   # Tuple containers
   def to_string({:{}, _, args} = ast, fun, state) do
-    inside_list? = Map.get(state, :inside_list?)
     tuple =
       # Enforce keyword syntax for tuples of size 2 inside list
-      if inside_list? == true and length(args) == 2 do
+      if state.inside_list? and length(args) == 2 do
         [k, v] = args
         kw_list_to_string([{k, v}], fun, state)
       else
@@ -980,7 +980,7 @@ defmodule ExFormat do
   end
 
   defp list_to_string(list, fun, state) do
-    state = Map.put(state, :inside_list?, true)
+    state = %{state | inside_list?: true}
     list_string = Enum.map_join(list, ", ", &to_string(&1, fun, state))
     if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
       list_to_multiline_string(list, fun, state)
