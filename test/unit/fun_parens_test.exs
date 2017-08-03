@@ -192,9 +192,17 @@ defmodule ExFormat.Unit.FunParensTest do
 
       assert_format_string("@spec foo :: number", "@spec foo() :: number\n")
       assert_format_string("@spec foo() :: number\n")
+      assert_format_string("@callback foo :: number", "@callback foo() :: number\n")
+      assert_format_string("@callback foo() :: number\n")
+      assert_format_string("@macrocallback foo :: number", "@macrocallback foo() :: number\n")
+      assert_format_string("@macrocallback foo() :: number\n")
 
       assert_format_string("@type foo() :: number", "@type foo :: number\n")
       assert_format_string("@type foo :: number\n")
+      assert_format_string("@typep foo() :: number", "@typep foo :: number\n")
+      assert_format_string("@typep foo :: number\n")
+      assert_format_string("@opaque foo() :: number", "@opaque foo :: number\n")
+      assert_format_string("@opaque foo :: number\n")
     end
 
     test "hardcoded parenless function calls" do
