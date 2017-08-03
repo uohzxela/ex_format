@@ -68,7 +68,7 @@ defmodule ExFormat.Unit.FunParensTest do
       end
       """
     end
-    
+
     test "case statement" do
       assert_format_string """
       case greeting do
@@ -189,6 +189,12 @@ defmodule ExFormat.Unit.FunParensTest do
       bad = "@spec start_link(module(), term(), Keyword.t()) :: on_start()"
       good = "@spec start_link(module, term, Keyword.t) :: on_start\n"
       assert_format_string(bad, good)
+
+      assert_format_string("@spec foo :: number", "@spec foo() :: number\n")
+      assert_format_string("@spec foo() :: number\n")
+
+      assert_format_string("@type foo() :: number", "@type foo :: number\n")
+      assert_format_string("@type foo :: number\n")
     end
 
     test "hardcoded parenless function calls" do
