@@ -44,4 +44,20 @@ defmodule ExFormat.Unit.KwListSyntaxTest do
       """
     end
   end
+
+  describe "keyword syntax for tuples inside list" do
+    test "maintain keyword sugar for tuples of size 2" do
+      assert_format_string("[:foo, bar: :baz]\n")
+      assert_format_string("[bar: :baz]\n")
+    end
+
+    test "enforce keyword sugar for tuples of size 2" do
+      assert_format_string("[{:bar, :baz}]", "[bar: :baz]\n")
+      assert_format_string("[:foo, {:bar, :baz}]", "[:foo, bar: :baz]\n")
+    end
+
+    test "do not enforce keyword sugar for tuples of size more than 2" do
+      assert_format_string("[{:foo, :bar, :baz}]\n")
+    end
+  end
 end

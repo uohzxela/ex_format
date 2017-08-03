@@ -147,7 +147,7 @@ defmodule ExFormat.Unit.KeywordListTest do
           package: package(),
           aliases: aliases(),
           test_coverage: [tool: ExCoveralls],
-          preferred_cli_env: [{:"test.local", :test}, {:coveralls, :test}, {:"coveralls.travis", :test}],
+          preferred_cli_env: ["test.local": :test, coveralls: :test, "coveralls.travis": :test],
           name: "Mssqlex",
           source_url: "https://github.com/findmypast-oss/mssqlex",
           docs: [main: "readme", extras: ["README.md"]],
