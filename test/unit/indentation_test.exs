@@ -7,23 +7,45 @@ defmodule ExFormat.Unit.IndentationTest do
       assert_format_string("1 |> 2 |> 3 |> 4\n")
     end
 
-    test "split if pipeline is too long even though it has no line break" do
+    test "split every pipe if pipeline is too long even though it has no line break" do
       bad = "input |> Some.verylongcall() |> Again.verylonglongcall() |> AgainAgain.verylonglongcall() |> AgainAgainAgain.verylonglongcall"
       good = """
-      input |> Some.verylongcall() |> Again.verylonglongcall()
+      input
+      |> Some.verylongcall()
+      |> Again.verylonglongcall()
       |> AgainAgain.verylonglongcall()
       |> AgainAgainAgain.verylonglongcall()
       """
       assert_format_string(bad, good)
     end
 
-    test "split if pipeline has intended line break" do
-      assert_format_string """
-      1
-      |> 2
-      |> 3
-      |> 4
+    test "split every pipe if there's intended line break in pipeline" do
+      good = """
+      input
+      |> pipe1()
+      |> pipe2()
+      |> pipe3()
+      |> pipe4()
       """
+      assert_format_string(good)
+
+      bad = """
+      input |> pipe1()
+      |> pipe2() |> pipe3() |> pipe4()
+      """
+      assert_format_string(bad, good)
+
+      bad = """
+      input |> pipe1() |> pipe2() |> pipe3()
+      |> pipe4()
+      """
+      assert_format_string(bad, good)
+
+      bad = """
+      input |> pipe1() |> pipe2()
+      |> pipe3() |> pipe4()
+      """
+      assert_format_string(bad, good)
     end
   end
 

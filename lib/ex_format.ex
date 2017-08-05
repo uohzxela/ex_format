@@ -79,6 +79,7 @@ defmodule ExFormat do
       parenless_zero_arity?: false,
       in_spec: nil,
       in_tuple?: false,
+      multiline_pipeline?: false,
     }
     for {line, i} <- Enum.with_index(lines) do
       update_line(i+1, String.trim(line))
@@ -494,7 +495,7 @@ defmodule ExFormat do
 
   # Multiline-able binary ops
   def to_string({op, _, [left, right]} = ast, fun, state) when op in [:<>, :++, :and, :or] do
-    {left_meta, right_meta} ={get_meta(left), get_meta(right)}
+    {left_meta, right_meta} = {get_meta(left), get_meta(right)}
     {left_string, right_string} = {
       op_to_string(left, fun, op, :left, state),
       op_to_string(right, fun, op, :right, state)
@@ -511,21 +512,19 @@ defmodule ExFormat do
   end
 
   # Pipeline op
-  def to_string({:|> = op, _, [left, right]} = ast, fun, state) do
-    {left_meta, right_meta} ={get_meta(left), get_meta(right)}
-    {left_string, right_string} = {
-      op_to_string(left, fun, op, :left, state),
-      op_to_string(right, fun, op, :right, state)
-    }
-    string = fun.(ast, left_string <> " #{op} " <> right_string)
+  def to_string({:|>, _, [left, right]} = ast, fun, state) do
+    {left_meta, right_meta} = {get_meta(left), get_meta(right)}
+    pipeline_string = pipeline_to_string(ast, fun, state)
 
-    pipeline_op = cond do
-      left_meta == [] or right_meta == [] -> " #{op} "
-      left_meta[:line] != right_meta[:line] -> "\n#{op} "
-      not fits?(string) -> "\n#{op} "
-      true -> " #{op} "
-    end
-    fun.(ast, left_string <> pipeline_op <> right_string)
+    multiline? =
+      state.multiline_pipeline? or
+      pipeline_string =~ "\n" or
+      (left_meta != [] and right_meta != [] and
+      left_meta[:line] != right_meta[:line]) or
+      not fits?(pipeline_string)
+
+    state = %{state | multiline_pipeline?: multiline?}
+    pipeline_to_string(ast, fun, state)
   end
 
   # Assignment op
@@ -1090,6 +1089,13 @@ defmodule ExFormat do
       left = comma_join_or_empty_paren(left, fun, paren, state)
       left <> "-> " <> to_string(right, fun, state)
     end)
+  end
+
+  defp pipeline_to_string({:|> = op, _, [left, right]} = ast, fun, state) do
+    left_string = op_to_string(left, fun, op, :left, state)
+    right_string = op_to_string(right, fun, op, :right, state)
+    pipeline_op = if state.multiline_pipeline?, do: "\n#{op} ", else: " #{op} "
+    fun.(ast, left_string <> pipeline_op <> right_string)
   end
 
   defp comma_join_or_empty_paren([], _fun, true, _state),  do: "() "
