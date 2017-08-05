@@ -64,8 +64,8 @@ defmodule ExFormat.Unit.IndentationTest do
       """
       good = """
       "In the first hours of day" <>
-      "consciousness can embrace the world" <>
-      "just as the hand grasps a sun-warm stone."
+        "consciousness can embrace the world" <>
+        "just as the hand grasps a sun-warm stone."
       """
       assert_format_string(bad, good)
     end
@@ -78,8 +78,8 @@ defmodule ExFormat.Unit.IndentationTest do
       """
       good = """
       "The traveler stands under the tree. After" <>
-      "the plunge through" <> # death's whirling vortex, will
-      "a great light" # unfurl over his head?
+        "the plunge through" <> # death's whirling vortex, will
+        "a great light" # unfurl over his head?
       """
       assert_format_string(bad, good)
 
@@ -90,9 +90,46 @@ defmodule ExFormat.Unit.IndentationTest do
       """
       good = """
       [{:prev, prev_lineno}] ++
-      [{:prefix_comments, get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
-      [{:prefix_newline, get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
-      curr_ctx
+        [{:prefix_comments, get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
+        [{:prefix_newline, get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
+        curr_ctx
+      """
+      assert_format_string(bad, good)
+    end
+
+    test "correct indentation of multiline binary op" do
+      bad = """
+      "No matching message.\\n" <>
+      "Process mailbox:\\n" <>
+      mailbox
+      """
+      good = """
+      "No matching message.\\n" <>
+        "Process mailbox:\\n" <>
+        mailbox
+      """
+      assert_format_string(bad, good)
+
+      assert_format_string """
+
+      "No matching message.\\n" <>
+        "Process mailbox:\\n" <>
+        mailbox
+      """
+    end
+
+    test "correct indentation of binary op when assigning" do
+      bad = """
+      message =
+        "No matching message.\\n" <>
+          "Process mailbox:\\n" <>
+          mailbox
+      """
+      good = """
+      message =
+        "No matching message.\\n" <>
+        "Process mailbox:\\n" <>
+        mailbox
       """
       assert_format_string(bad, good)
     end
