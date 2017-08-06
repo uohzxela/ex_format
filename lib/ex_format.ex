@@ -716,10 +716,15 @@ defmodule ExFormat do
   # Check if we have an interpolated string.
   defp interpolated?({:<<>>, _, [_ | _] = parts}) do
     Enum.all?(parts, fn
-      {:::, _, [{{:., _, [Kernel, :to_string]}, _, [_]},
-                {:binary, _, _}]} -> true
-      binary when is_binary(binary) -> true
-      _ -> false
+      {:::, _, [
+        {{:., _, [Kernel, :to_string]}, _, [_]},
+        {:binary, _, _},
+      ]} ->
+        true
+      binary when is_binary(binary) ->
+        true
+      _ ->
+        false
     end)
   end
 
@@ -736,24 +741,26 @@ defmodule ExFormat do
   end
 
   defp interpolate_string({:<<>>, _, parts}, fun, state) do
-    parts = Enum.map_join(parts, "", fn
-      {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
-        "\#{" <> to_string(arg, fun, state) <> "}"
-      binary when is_binary(binary) ->
-        binary = inspect(binary, [])
-        :binary.part(binary, 1, byte_size(binary) - 2)
-    end)
+    parts =
+      Enum.map_join(parts, "", fn
+        {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
+          "\#{" <> to_string(arg, fun, state) <> "}"
+        binary when is_binary(binary) ->
+          binary = inspect(binary, [])
+          :binary.part(binary, 1, byte_size(binary) - 2)
+      end)
     # TODO: wrap it in to_string?
-    <<?", parts::binary, ?">>
+    <<?\", parts::binary, ?\">>
   end
 
   defp interpolate_heredoc({:<<>>, meta, parts}, fun, state) do
-    parts = Enum.map_join(parts, "", fn
-      {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
-        "\#{" <> to_string(arg, fun, state) <> "}"
-      binary when is_binary(binary) ->
-        binary
-    end)
+    parts =
+      Enum.map_join(parts, "", fn
+        {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
+          "\#{" <> to_string(arg, fun, state) <> "}"
+        binary when is_binary(binary) ->
+          binary
+      end)
     format_literal({:__block__, meta, [parts]}, fun)
   end
 
@@ -767,12 +774,13 @@ defmodule ExFormat do
   defp sigil_terminator(?<), do: ?>
 
   defp interpolate_with_terminator({:<<>>, _, parts}, terminator, fun, state) do
-    parts = Enum.map_join(parts, "", fn
-      {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
-        "\#{" <> to_string(arg, fun, state) <> "}"
-      binary when is_binary(binary) ->
-        escape_terminators(binary, terminator)
-    end)
+    parts =
+      Enum.map_join(parts, "", fn
+        {:::, _, [{{:., _, [Kernel, :to_string]}, _, [arg]}, {:binary, _, _}]} ->
+          "\#{" <> to_string(arg, fun, state) <> "}"
+        binary when is_binary(binary) ->
+          escape_terminators(binary, terminator)
+      end)
     case terminator do
       [c] ->
         <<c, parts::binary, sigil_terminator(c)>>
@@ -888,17 +896,18 @@ defmodule ExFormat do
   end
 
   defp kw_blocks_to_string(kw, fun, args, state) do
-    {s, multiline?} = Enum.reduce(@kw_keywords, {"", false}, fn(x, acc) ->
-      if Keyword.has_key?(kw, x) do
-        ast = Keyword.get(kw, x)
-        {s, multiline?} = acc
-        multiline? = multiline? or multiline?(ast, state)
-        s = s <> kw_block_to_string(x, ast, fun, multiline?, args, state)
-        {s, multiline?}
-      else
-        acc
-      end
-    end)
+    {s, multiline?} =
+      Enum.reduce(@kw_keywords, {"", false}, fn x, acc ->
+        if Keyword.has_key?(kw, x) do
+          ast = Keyword.get(kw, x)
+          {s, multiline?} = acc
+          multiline? = multiline? or multiline?(ast, state)
+          s = s <> kw_block_to_string(x, ast, fun, multiline?, args, state)
+          {s, multiline?}
+        else
+          acc
+        end
+      end)
     if multiline?, do: " " <> s <> "end", else: s
   end
 
@@ -931,7 +940,6 @@ defmodule ExFormat do
 
   defp block_to_string({:__block__, _, exprs}, fun, state) do
     Enum.map_join(exprs, "\n", &to_string(&1, fun, state))
-
   end
 
   defp block_to_string(other, fun, state), do: to_string(other, fun, state)
