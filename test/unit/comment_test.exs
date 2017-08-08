@@ -75,6 +75,19 @@ defmodule ExFormat.Unit.CommentTest do
       %{:key => :value}
       """
     end
+
+    test "for case statements" do
+      assert_format_string """
+      case [] do
+        # comment 1
+        [] ->
+          :ok
+        # comment 2
+        [_ | _] ->
+          :ok
+      end
+      """
+    end
   end
 
   test "preserves suffix comments" do

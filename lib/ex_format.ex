@@ -927,9 +927,10 @@ defmodule ExFormat do
   end
 
   defp block_to_string([{:->, _, _} | _] = block, fun, state) do
-    Enum.map_join(block, "\n", fn({:->, _, [left, right]}) ->
+    Enum.map_join(block, "\n", fn({:->, _, [left, right]} = ast) ->
       left = comma_join_or_empty_paren(left, fun, false, state)
-      left <> "->\n  " <> adjust_new_lines block_to_string(right, fun, state), "\n  "
+      string = left <> "->\n  " <> adjust_new_lines block_to_string(right, fun, state), "\n  "
+      fun.(ast, string)
     end)
   end
 
