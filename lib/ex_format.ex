@@ -79,9 +79,10 @@ defmodule ExFormat do
       parenless_zero_arity?: false,
       in_spec: nil,
       in_tuple?: false,
-      multiline_pipeline?: false,
       in_assignment?: false,
       in_bin_op?: false,
+      multiline_pipeline?: false,
+      multiline_bin_op?: false,
     }
     for {line, i} <- Enum.with_index(lines) do
       update_line(i+1, String.trim(line))
@@ -498,27 +499,17 @@ defmodule ExFormat do
   # Multiline-able binary ops
   def to_string({op, _, [left, right]} = ast, fun, state) when op in [:<>, :++, :and, :or] do
     {left_meta, right_meta} = {get_meta(left), get_meta(right)}
-    left_string = op_to_string(left, fun, op, :left, state)
-    right_string = op_to_string(right, fun, op, :right, state)
+    bin_op_string = bin_op_to_string(ast, fun, state)
 
-    string = fun.(ast, left_string <> " #{op} " <> right_string)
-    bin_op =
-      cond do
-        left_meta == [] or right_meta == [] -> " #{op} "
-        left_meta[:line] != right_meta[:line] -> " #{op}\n"
-        not fits?(string) -> " #{op}\n"
-        true -> " #{op} "
-      end
+    multiline? =
+      state.multiline_bin_op? or
+      bin_op_string =~ "\n" or
+      (left_meta != [] and right_meta != [] and
+      left_meta[:line] != right_meta[:line]) or
+      not fits?(bin_op_string)
 
-    if not state.in_assignment? and not state.in_bin_op? do
-      state = %{state | in_bin_op?: true}
-      right_string_with_bin_op =
-        bin_op <> op_to_string(right, fun, op, :right, state)
-        |> adjust_new_lines("\n  ")
-      fun.(ast, left_string <> right_string_with_bin_op)
-    else
-      fun.(ast, left_string <> bin_op <> right_string)
-    end
+    state = %{state | multiline_bin_op?: multiline?}
+    bin_op_to_string(ast, fun, state)
   end
 
   # Pipeline op
@@ -1116,6 +1107,21 @@ defmodule ExFormat do
     right_string = op_to_string(right, fun, op, :right, state)
     pipeline_op = if state.multiline_pipeline?, do: "\n#{op} ", else: " #{op} "
     fun.(ast, left_string <> pipeline_op <> right_string)
+  end
+
+  defp bin_op_to_string({op, _, [left, right]} = ast, fun, state) when op in [:<>, :++, :and, :or] do
+    left_string = op_to_string(left, fun, op, :left, state)
+    right_string = op_to_string(right, fun, op, :right, state)
+    bin_op = if state.multiline_bin_op?, do: " #{op}\n", else: " #{op} "
+    if not state.in_assignment? and not state.in_bin_op? do
+      state = %{state | in_bin_op?: true}
+      right_string_with_bin_op =
+        bin_op <> op_to_string(right, fun, op, :right, state)
+        |> adjust_new_lines("\n  ")
+      fun.(ast, left_string <> right_string_with_bin_op)
+    else
+      fun.(ast, left_string <> bin_op <> right_string)
+    end
   end
 
   defp comma_join_or_empty_paren([], _fun, true, _state),  do: "() "

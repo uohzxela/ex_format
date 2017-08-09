@@ -133,6 +133,88 @@ defmodule ExFormat.Unit.IndentationTest do
       """
       assert_format_string(bad, good)
     end
+
+    test "split every <> operator if there's line break in the operation" do
+      good = """
+      "test1" <>
+        "test2" <>
+        "test3" <>
+        "test4"
+      """
+
+      bad = """
+      "test1" <> "test2" <> "test3" <>
+      "test4"
+      """
+      assert_format_string(bad, good)
+
+      bad = """
+      "test1" <> "test2" <>
+      "test3" <> "test4"
+      """
+      assert_format_string(bad, good)
+
+      bad = """
+      "test1" <>
+      "test2" <> "test3" <> "test4"
+      """
+      assert_format_string(bad, good)
+    end
+
+    test "split every ++ operator if there's line break in the operation" do
+      good = """
+      test1 ++
+        test2 ++
+        test3 ++
+        test4
+      """
+
+      bad = """
+      test1 ++ test2 ++ test3 ++
+      test4
+      """
+      assert_format_string(bad, good)
+
+      bad = """
+      test1 ++ test2 ++
+      test3 ++ test4
+      """
+      assert_format_string(bad, good)
+
+      bad = """
+      test1 ++
+      test2 ++ test3 ++ test4
+      """
+      assert_format_string(bad, good)
+    end
+
+    test "split every 'and'/'or' operator if there's line break in the operation" do
+      good = """
+      test1 and
+        test2 and
+        test3 or
+        test4 or
+        test5
+      """
+
+      bad = """
+      test1 and test2 and test3 or test4 or
+      test5
+      """
+      assert_format_string(bad, good)
+
+      bad = """
+      test1 and test2 and
+      test3 or test4 or test5
+      """
+      assert_format_string(bad, good)
+
+      bad = """
+      test1 and
+      test2 and test3 or test4 or test5
+      """
+      assert_format_string(bad, good)
+    end
   end
 
   describe "'with' special form indentation" do
