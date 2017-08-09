@@ -37,4 +37,24 @@ defmodule ExFormat.Unit.GuardClauseTest do
       """
     end
   end
+
+  test "indentation for multiline guard clauses should be consistent" do
+    assert_format_string """
+    defmacrop f(a)
+              when is_atom(a) and
+                a in @test1 and
+                a in @test2 do
+      something
+    end
+    """
+
+    assert_format_string """
+    defmacro f(a)
+             when is_atom(a)
+             |> test1()
+             |> test2() do
+      something
+    end
+    """
+  end
 end

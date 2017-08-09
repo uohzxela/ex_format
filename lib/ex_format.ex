@@ -558,7 +558,7 @@ defmodule ExFormat do
   end
 
   # left when right
-  def to_string({:when, ctx, [left, right]} = ast, fun, state) do
+  def to_string({:when, meta, [left, right]} = ast, fun, state) do
     right =
       if right != [] and Keyword.keyword?(right) do
         kw_list_to_string(right, fun, state)
