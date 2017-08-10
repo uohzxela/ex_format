@@ -5,42 +5,104 @@ defmodule ExFormat do
   @type t :: expr | {t, t} | atom | number | binary | pid | fun | [t]
   @type expr :: {expr | atom, Keyword.t, atom | [t]}
 
-  @binary_ops [:===, :!==,
-    :==, :!=, :<=, :>=,
-    :&&, :||, :<>, :++, :--, :\\, :::, :<-, :.., :|>, :=~,
-    :<, :>, :->,
-    :+, :-, :*, :/, :=, :|, :.,
-    :and, :or, :when, :in,
-    :~>>, :<<~, :~>, :<~, :<~>, :<|>,
-    :<<<, :>>>, :|||, :&&&, :^^^, :~~~]
+  @binary_ops [
+    :===,
+    :!==,
+    :==,
+    :!=,
+    :<=,
+    :>=,
+    :&&,
+    :||,
+    :<>,
+    :++,
+    :--,
+    :\\,
+    :::,
+    :<-,
+    :..,
+    :|>,
+    :=~,
+    :<,
+    :>,
+    :->,
+    :+,
+    :-,
+    :*,
+    :/,
+    :=,
+    :|,
+    :.,
+    :and,
+    :or,
+    :when,
+    :in,
+    :~>>,
+    :<<~,
+    :~>,
+    :<~,
+    :<~>,
+    :<|>,
+    :<<<,
+    :>>>,
+    :|||,
+    :&&&,
+    :^^^,
+    :~~~,
+  ]
 
   @doc false
-  defmacro binary_ops, do: @binary_ops
+  defmacro binary_ops(), do: @binary_ops
 
   @unary_ops [:!, :@, :^, :not, :+, :-, :~~~, :&]
 
   @doc false
-  defmacro unary_ops, do: @unary_ops
+  defmacro unary_ops(), do: @unary_ops
 
   @spec binary_op_props(atom) :: {:left | :right, precedence :: integer}
   defp binary_op_props(o) do
     case o do
-      o when o in [:<-, :\\]                  -> {:left,  40}
-      :when                                   -> {:right, 50}
-      :::                                     -> {:right, 60}
-      :|                                      -> {:right, 70}
-      :=                                      -> {:right, 90}
-      o when o in [:||, :|||, :or]            -> {:left, 130}
-      o when o in [:&&, :&&&, :and]           -> {:left, 140}
-      o when o in [:==, :!=, :=~, :===, :!==] -> {:left, 150}
-      o when o in [:<, :<=, :>=, :>]          -> {:left, 160}
-      o when o in [:|>, :<<<, :>>>, :<~, :~>,
-                :<<~, :~>>, :<~>, :<|>, :^^^] -> {:left, 170}
-      :in                                     -> {:left, 180}
-      o when o in [:++, :--, :.., :<>]        -> {:right, 200}
-      o when o in [:+, :-]                    -> {:left, 210}
-      o when o in [:*, :/]                    -> {:left, 220}
-      :.                                      -> {:left, 310}
+      o when o in [:<-, :\\] ->
+        {:left, 40}
+      :when ->
+        {:right, 50}
+      ::: ->
+        {:right, 60}
+      :| ->
+        {:right, 70}
+      := ->
+        {:right, 90}
+      o when o in [:||, :|||, :or] ->
+        {:left, 130}
+      o when o in [:&&, :&&&, :and] ->
+        {:left, 140}
+      o when o in [:==, :!=, :=~, :===, :!==] ->
+        {:left, 150}
+      o when o in [:<, :<=, :>=, :>] ->
+        {:left, 160}
+      o when o in [
+        :|>,
+        :<<<,
+        :>>>,
+        :<~,
+        :~>,
+        :<<~,
+        :~>>,
+        :<~>,
+        :<|>,
+        :^^^,
+      ] ->
+        {:left, 170}
+      :in ->
+        {:left, 180}
+      o when o in [:++, :--, :.., :<>] ->
+        {:right, 200}
+      o when o in [:+, :-] ->
+        {:left, 210}
+      o when o in [:*, :/] ->
+        {:left, 220}
+      :. ->
+        {:left, 310}
     end
   end
 
@@ -85,14 +147,15 @@ defmodule ExFormat do
       multiline_bin_op?: false,
     }
     for {line, i} <- Enum.with_index(lines) do
-      update_line(i+1, String.trim(line))
+      update_line(i + 1, String.trim(line))
       inline_comment_token = extract_inline_comment_token(line)
 
       if inline_comment_token do
         {_, {_, start_col, _}, inline_comment} = inline_comment_token
-        fingerprint = line
-        |> String.slice(0..start_col)
-        |> get_line_fingerprint
+        fingerprint =
+          line
+          |> String.slice(0..start_col)
+          |> get_line_fingerprint()
         if fingerprint != "", do: update_inline_comments(fingerprint, inline_comment)
       end
     end
@@ -110,28 +173,31 @@ defmodule ExFormat do
   end
 
   defp format({ast, state}) do
-    fun = fn ast, string ->
-      case ast do
-        {_, meta, _} ->
-          Enum.join [
-            meta[:prefix_comments],
-            meta[:prefix_newline],
-            string, meta[:suffix_comments]
-          ]
-        _ ->
-          string
+    fun =
+      fn ast, string ->
+        case ast do
+          {_, meta, _} ->
+            Enum.join([
+              meta[:prefix_comments],
+              meta[:prefix_newline],
+              string,
+              meta[:suffix_comments],
+            ])
+          _ ->
+            string
+        end
       end
-    end
     to_string(ast, fun, state)
   end
 
   defp postprocess(formatted) do
     formatted_lines = String.split(formatted, "\n")
-    formatted = Enum.map_join(formatted_lines, "\n", fn line ->
-      line = String.trim_trailing line
-      fingerprint = get_line_fingerprint line
-      line <> get_inline_comments(fingerprint)
-    end)
+    formatted =
+      Enum.map_join(formatted_lines, "\n", fn line ->
+        line = String.trim_trailing(line)
+        fingerprint = get_line_fingerprint(line)
+        line <> get_inline_comments(fingerprint)
+      end)
     formatted <> "\n"
   end
 
@@ -151,19 +217,22 @@ defmodule ExFormat do
   defp extract_inline_comment_token(line) do
     {_, _, _, tokens} = :elixir_tokenizer.tokenize(to_charlist(line), 0,
       preserve_comments: true, check_terminators: false)
-    token = tokens
-    |> Stream.with_index
-    |> Stream.filter(fn {token, i} ->
-      elem(token, 0) == :comment and i > 0 and get_lineno(Enum.at(tokens, i-1)) == get_lineno(token)
-    end)
-    |> Enum.to_list
-    |> List.first
+    token =
+      tokens
+      |> Stream.with_index()
+      |> Stream.filter(fn {token, i} ->
+        elem(token, 0) == :comment and
+        i > 0 and
+        get_lineno(Enum.at(tokens, i - 1)) == get_lineno(token)
+      end)
+      |> Enum.to_list()
+      |> List.first()
     if token, do: elem(token, 0), else: token
   end
 
   defp get_line_fingerprint(line) do
     # TODO: be less aggressive with removing non-word chars here
-    Enum.join String.split(line, ~r/\W+/)
+    Enum.join(String.split(line, ~r/\W+/))
   end
 
   defp get_lineno(nil), do: nil
@@ -196,15 +265,17 @@ defmodule ExFormat do
   defp update_meta(curr_meta) do
     curr_lineno = curr_meta[:line]
     # TODO: is suffix_newline necessary?
-    [{:suffix_comments, get_suffix_comments(curr_lineno+1)}] ++ curr_meta
+    [{:suffix_comments, get_suffix_comments(curr_lineno + 1)}] ++
+      curr_meta
   end
   defp update_meta(curr_meta, prev_meta) do
     curr_lineno = curr_meta[:line]
     prev_lineno = prev_meta[:line]
 
     [{:prev, prev_lineno}] ++
-    [{:prefix_comments, get_prefix_comments(curr_lineno-1, prev_lineno)}] ++
-    [{:prefix_newline, get_prefix_newline(curr_lineno-1, prev_lineno)}] ++ curr_meta
+      [{:prefix_comments, get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
+      [{:prefix_newline, get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
+      curr_meta
   end
 
   defp get_line(k), do: Agent.get(:lines, fn map -> Map.get(map, k) end)
@@ -215,7 +286,7 @@ defmodule ExFormat do
 
   defp parenless_call?(call, args, state) when is_atom(call) do
     MapSet.member?(state.parenless_calls, call) or
-    parenless_zero_arity?(args, state)
+      parenless_zero_arity?(args, state)
   end
   defp parenless_call?({:., _, [left, _right]}, args, state) do
     case left do
@@ -260,11 +331,11 @@ defmodule ExFormat do
   defp get_prefix_comments(curr, prev) do
     case get_line(curr) do
       "#" <> comment ->
-        comment = get_prefix_newline(curr-1, prev) <> "#" <> comment <> "\n"
+        comment = get_prefix_newline(curr - 1, prev) <> "#" <> comment <> "\n"
         clear_line(curr) # clear current comment to avoid duplicates
-        get_prefix_comments(curr-1, prev) <> comment
+        get_prefix_comments(curr - 1, prev) <> comment
       "" ->
-        get_prefix_comments(curr-1, prev)
+        get_prefix_comments(curr - 1, prev)
       _ ->
         ""
     end
@@ -273,11 +344,11 @@ defmodule ExFormat do
   defp get_suffix_comments(curr) do
     case get_line(curr) do
       "#" <> comment ->
-        comment = "\n" <> get_prefix_newline(curr-1) <> "#" <> comment
+        comment = "\n" <> get_prefix_newline(curr - 1) <> "#" <> comment
         clear_line(curr)
-        comment <> get_suffix_comments(curr+1)
+        comment <> get_suffix_comments(curr + 1)
       "" ->
-        get_suffix_comments(curr+1)
+        get_suffix_comments(curr + 1)
       _ ->
         ""
     end
@@ -285,9 +356,12 @@ defmodule ExFormat do
 
   defp has_suffix_comments(curr) do
     case get_line(curr) do
-      "#" <> _ -> true
-      "" -> has_suffix_comments(curr+1)
-      _ -> false
+      "#" <> _ ->
+        true
+      "" ->
+        has_suffix_comments(curr + 1)
+      _ ->
+        false
     end
   end
 
@@ -295,9 +369,9 @@ defmodule ExFormat do
     case ast do
       {:__block__, meta, [_expr]} ->
         format({ast, state}) =~ "\n" or
-        (meta != [] and
-        (has_suffix_comments(meta[:line]+1) or
-         meta[:line] != meta[:prev]))
+          meta != [] and
+          (has_suffix_comments(meta[:line] + 1) or
+          meta[:line] != meta[:prev])
       {:__block__, _, _} ->
         true
       {_, meta, _} ->
@@ -310,9 +384,9 @@ defmodule ExFormat do
   defp get_first_token(nil), do: ""
   defp get_first_token(line) do
     line
-    |> String.trim_leading
-    |> String.split
-    |> List.first
+    |> String.trim_leading()
+    |> String.split()
+    |> List.first()
   end
 
   defp get_meta({_, meta, _}) do
@@ -322,14 +396,14 @@ defmodule ExFormat do
 
   defp on_same_line?(args, tuple, state)
        when is_list(args) and is_tuple(tuple) do
-    arg = List.first args
+    arg = List.first(args)
     {arg_meta, tuple_meta} = {get_meta(arg), get_meta(tuple)}
     cond do
       arg_meta != [] and tuple_meta != [] ->
         arg_meta[:line] == tuple_meta[:line]
       true ->
         tuple_string = format({tuple, state})
-        not (tuple_string =~ "\n") and fits?(tuple_string)
+        not(tuple_string =~ "\n") and fits?(tuple_string)
     end
   end
 
@@ -337,7 +411,7 @@ defmodule ExFormat do
     case ast do
       {:%, _, [_structname, _map]} ->
         false
-       {:%{}, _, _} ->
+      {:%{}, _, _} ->
         false
       {:__block__, _, [expr]} when is_list(expr) or is_tuple(expr) ->
         false
@@ -348,13 +422,13 @@ defmodule ExFormat do
 
   defp parenless_capture?({atom, _, _})
        when is_atom(atom) and
-       atom not in unquote(@unary_ops) and
-       atom not in unquote(@binary_ops) do
+            not(atom in unquote(@unary_ops)) and
+            not(atom in unquote(@binary_ops)) do
     true
   end
   defp parenless_capture?({{:., _, args}, _, _}) do
     {sym, _, _} = List.first(args)
-    sym not in @ampersand_operators
+    not(sym in @ampersand_operators)
   end
   defp parenless_capture?({:__block__, _, [expr]})
        when is_list(expr) or is_tuple(expr) do
@@ -391,7 +465,7 @@ defmodule ExFormat do
   """
   @spec to_string(Macro.t) :: String.t
   @spec to_string(Macro.t, (Macro.t, String.t -> String.t), %{}) :: String.t
-  def to_string(tree, fun \\ fn(_ast, string) -> string end, state \\ %{})
+  def to_string(tree, fun \\ fn _ast, string -> string end, state \\ %{})
 
   # Variables
   def to_string({var, _, atom} = ast, fun, _state) when is_atom(atom) do
@@ -421,14 +495,15 @@ defmodule ExFormat do
     if interpolated?(ast) do
       fun.(ast, interpolate(ast, fun, state))
     else
-      result = Enum.map_join(parts, ", ", fn(part) ->
-        str = bitpart_to_string(part, fun, state)
-        if :binary.first(str) == ?< or :binary.last(str) == ?> do
-          "(" <> str <> ")"
-        else
-          str
-        end
-      end)
+      result =
+        Enum.map_join(parts, ", ", fn part ->
+          str = bitpart_to_string(part, fun, state)
+          if :binary.first(str) == ?< or :binary.last(str) == ?> do
+            "(" <> str <> ")"
+          else
+            str
+          end
+        end)
       fun.(ast, "<<" <> result <> ">>")
     end
   end
@@ -448,13 +523,18 @@ defmodule ExFormat do
 
   def to_string({:%, _, [structname, map]} = ast, fun, state) do
     {:%{}, _, args} = map
-    struct = "%" <> to_string(structname, fun, state) <> "{" <> map_to_string(args, fun, state) <> "}"
+    struct =
+      "%" <>
+      to_string(structname, fun, state) <>
+      "{" <>
+      map_to_string(args, fun, state) <>
+      "}"
     fun.(ast, struct)
   end
 
   # Fn keyword
   def to_string({:fn, _, [{:->, _, [args, tuple]}] = arrow} = ast, fun, state) do
-    if not is_tuple(tuple) or (on_same_line?(args, tuple, state)) do
+    if not is_tuple(tuple) or on_same_line?(args, tuple, state) do
       fun.(ast, "fn " <> arrow_to_string(arrow, fun, state) <> " end")
     else
       fun.(ast, "fn " <> block_to_string(arrow, fun, state) <> "\nend")
@@ -462,7 +542,7 @@ defmodule ExFormat do
   end
 
   def to_string({:fn, _, block} = ast, fun, state) do
-    block = adjust_new_lines block_to_string(block, fun, state), "\n  "
+    block = adjust_new_lines(block_to_string(block, fun, state), "\n  ")
     fun.(ast, "fn\n  " <> block <> "\nend")
   end
 
@@ -488,12 +568,15 @@ defmodule ExFormat do
 
     {padding, newline} =
       if multiline?(ast, state) do
-        token = get_first_token(get_line ctx[:prev])
+        token = get_first_token(get_line(ctx[:prev]))
         {Enum.join(for _ <- 0..String.length(token), do: " "), "\n"}
       else
         {" ", ""}
       end
-    op_to_string(left, fun, :when, :left, state) <> newline <> fun.(ast, "#{padding}when " <> right)
+    op_to_string(left, fun, :when, :left, state) <>
+      newline <>
+      fun.(ast, "#{padding}when " <>
+      right)
   end
 
   # Multiline-able binary ops
@@ -504,8 +587,9 @@ defmodule ExFormat do
     multiline? =
       state.multiline_bin_op? or
       bin_op_string =~ "\n" or
-      (left_meta != [] and right_meta != [] and
-      left_meta[:line] != right_meta[:line]) or
+      left_meta != [] and
+      right_meta != [] and
+      left_meta[:line] != right_meta[:line] or
       not fits?(bin_op_string)
 
     state = %{state | multiline_bin_op?: multiline?}
@@ -520,8 +604,9 @@ defmodule ExFormat do
     multiline? =
       state.multiline_pipeline? or
       pipeline_string =~ "\n" or
-      (left_meta != [] and right_meta != [] and
-      left_meta[:line] != right_meta[:line]) or
+      left_meta != [] and
+      right_meta != [] and
+      left_meta[:line] != right_meta[:line] or
       not fits?(pipeline_string)
 
     state = %{state | multiline_pipeline?: multiline?}
@@ -557,13 +642,18 @@ defmodule ExFormat do
 
   # Binary ops
   def to_string({op, _, [left, right]} = ast, fun, state) when op in unquote(@binary_ops) do
-    fun.(ast, op_to_string(left, fun, op, :left, state) <> " #{op} " <> op_to_string(right, fun, op, :right, state))
+    fun.(ast, op_to_string(left, fun, op, :left, state) <>
+      " #{op} " <>
+      op_to_string(right, fun, op, :right, state))
   end
 
   # Splat when
   def to_string({:when, _, args} = ast, fun, state) do
     {left, right} = :elixir_utils.split_last(args)
-    fun.(ast, "(" <> Enum.map_join(left, ", ", &to_string(&1, fun, state)) <> ") when " <> to_string(right, fun, state))
+    fun.(ast, "(" <>
+      Enum.map_join(left, ", ", &to_string(&1, fun, state)) <>
+      ") when " <>
+      to_string(right, fun, state))
   end
 
   # Capture
@@ -578,7 +668,12 @@ defmodule ExFormat do
 
   def to_string({:&, _, [{:/, _, [{{:., _, [mod, name]}, _, []}, arity]}]} = ast, fun, state)
       when is_atom(name) do
-    fun.(ast, "&" <> to_string(mod, fun, state) <> "." <> Atom.to_string(name) <> "/" <> to_string(arity, fun, state))
+    fun.(ast, "&" <>
+      to_string(mod, fun, state) <>
+      "." <>
+      Atom.to_string(name) <>
+      "/" <>
+      to_string(arity, fun, state))
   end
 
   def to_string({:&, _, [arg]} = ast, fun, state) when not is_integer(arg) do
@@ -595,7 +690,7 @@ defmodule ExFormat do
     fun.(ast, Atom.to_string(unary) <> "(" <> to_string(arg, fun, state) <> ")")
   end
 
-  def to_string({:not, _, [arg]} = ast, fun, state)  do
+  def to_string({:not, _, [arg]} = ast, fun, state) do
     fun.(ast, "not " <> to_string(arg, fun, state))
   end
 
@@ -648,8 +743,11 @@ defmodule ExFormat do
     else
       {list, last} = :elixir_utils.split_last(args)
       fun.(ast, case kw_blocks?(last) do
-        true  -> call_to_string_with_args(target, list, fun, state) <> kw_blocks_to_string(last, fun, list, state)
-        false -> call_to_string_with_args(target, args, fun, state)
+        true ->
+          call_to_string_with_args(target, list, fun, state) <>
+            kw_blocks_to_string(last, fun, list, state)
+        false ->
+          call_to_string_with_args(target, args, fun, state)
       end)
     end
   end
@@ -666,7 +764,7 @@ defmodule ExFormat do
         "[]"
       :io_lib.printable_list(list) ->
         {escaped, _} = Inspect.BitString.escape(IO.chardata_to_string(list), ?')
-        IO.iodata_to_binary [?', escaped, ?']
+        IO.iodata_to_binary([?', escaped, ?'])
       Inspect.List.keyword?(list) ->
         if state.in_tuple? do
           kw_list_to_string(list, fun, state)
@@ -768,7 +866,7 @@ defmodule ExFormat do
 
   defp sigil_terminator(?/), do: ?/
   defp sigil_terminator(?|), do: ?|
-  defp sigil_terminator(?"), do: ?"
+  defp sigil_terminator(?\"), do: ?\"
   defp sigil_terminator(?'), do: ?'
   defp sigil_terminator(?(), do: ?)
   defp sigil_terminator(?[), do: ?]
@@ -792,7 +890,7 @@ defmodule ExFormat do
   end
 
   defp escape_terminators(binary, terminator) do
-    c = List.first terminator
+    c = List.first(terminator)
     if length(terminator) == 1 do
       String.replace(binary, <<c>>, <<?\\, c>>)
     else
@@ -808,7 +906,8 @@ defmodule ExFormat do
     sigil =
       case Atom.to_string(func) do
         <<"sigil_", name>> ->
-          "~" <> <<name>> <>
+          "~" <>
+          <<name>> <>
           interpolate_with_terminator(bin, meta[:terminator], fun, state) <>
           sigil_args(args, fun)
         _ ->
@@ -821,36 +920,43 @@ defmodule ExFormat do
     nil
   end
 
-  defp sigil_args([], _fun),   do: ""
+  defp sigil_args([], _fun), do: ""
   defp sigil_args(args, fun), do: fun.(args, List.to_string(args))
 
-  defp call_to_string(atom, _fun, _state) when is_atom(atom),
-    do: Atom.to_string(atom)
-  defp call_to_string({:., _, [{:&, _, [val]} = arg]}, fun, state) when not is_integer(val),
-    do: "(" <> module_to_string(arg, fun, state) <> ")."
-  defp call_to_string({:., _, [{:fn, _, _} = arg]}, fun, state),
-    do: "(" <> module_to_string(arg, fun, state) <> ")."
-  defp call_to_string({:., _, [arg]}, fun, state),
-    do: module_to_string(arg, fun, state) <> "."
+  defp call_to_string(atom, _fun, _state) when is_atom(atom) do
+    Atom.to_string(atom)
+  end
+  defp call_to_string({:., _, [{:&, _, [val]} = arg]}, fun, state) when not is_integer(val) do
+    "(" <> module_to_string(arg, fun, state) <> ")."
+  end
+  defp call_to_string({:., _, [{:fn, _, _} = arg]}, fun, state) do
+    "(" <> module_to_string(arg, fun, state) <> ")."
+  end
+  defp call_to_string({:., _, [arg]}, fun, state) do
+    module_to_string(arg, fun, state) <> "."
+  end
   # e.g. env.module()
-  defp call_to_string({:., _, [left, right]}, fun, state),
-    do: module_to_string(left, fun, state) <> "." <> call_to_string(right, fun, state)
-  defp call_to_string(other, fun, state),
-    do: to_string(other, fun, state)
+  defp call_to_string({:., _, [left, right]}, fun, state) do
+    module_to_string(left, fun, state) <> "." <> call_to_string(right, fun, state)
+  end
+  defp call_to_string(other, fun, state) do
+    to_string(other, fun, state)
+  end
 
   defp call_to_string_with_args({:., _, [:erlang, :binary_to_atom]}, args, fun, state) do
-    args = args_to_string(args, fun, state)
-    |> String.split("\"")
-    |> Enum.drop(-1)
-    |> Enum.join()
+    args =
+      args_to_string(args, fun, state)
+      |> String.split("\"")
+      |> Enum.drop(-1)
+      |> Enum.join()
 
-    <<?:, ?", args::binary, ?">>
+    <<?:, ?\", args::binary, ?\">>
   end
 
   defp call_to_string_with_args(target, args, fun, state) when target in [:with, :for, :defstruct] do
     target_string = Atom.to_string(target) <> " "
     delimiter = ",\n#{String.duplicate(" ", String.length(target_string))}"
-    args_string = args_to_string(args, fun, delimiter, state) |> String.trim
+    args_string = args_to_string(args, fun, delimiter, state) |> String.trim()
     target_string <> args_string
   end
 
@@ -858,7 +964,7 @@ defmodule ExFormat do
     target_string = call_to_string(target, fun, state)
     args_string = args_to_string(args, fun, state)
     if parenless_call?(target, args, state) do
-      (target_string <> " " <> args_string) |> String.trim()
+      target_string <> " " <> args_string |> String.trim()
     else
       target_string <> "(" <> args_string <> ")"
     end
@@ -873,8 +979,10 @@ defmodule ExFormat do
     if last != [] and Inspect.List.keyword?(last) do
       prefix =
         case list do
-          [] -> ""
-          _  -> Enum.map_join(list, delimiter, &to_string(&1, fun, state)) <> ", "
+          [] ->
+            ""
+          _ ->
+            Enum.map_join(list, delimiter, &to_string(&1, fun, state)) <> ", "
         end
       kw_list_string =
         last
@@ -917,21 +1025,24 @@ defmodule ExFormat do
     block = block_to_string(value, fun, state)
     args_in_front? = length(args) > 0
     if multiline? do
-      block = adjust_new_lines block, "\n  "
+      block = adjust_new_lines(block, "\n  ")
       Atom.to_string(key) <> "\n  " <> block <> "\n"
     else
       if args_in_front? do
         ", "
       else
         " "
-      end <> Atom.to_string(key) <> ": " <> block
+      end <>
+        Atom.to_string(key) <>
+        ": " <>
+        block
     end
   end
 
   defp block_to_string([{:->, _, _} | _] = block, fun, state) do
-    Enum.map_join(block, "\n", fn({:->, _, [left, right]} = ast) ->
+    Enum.map_join(block, "\n", fn {:->, _, [left, right]} = ast ->
       left = comma_join_or_empty_paren(left, fun, false, state)
-      string = left <> "->\n  " <> adjust_new_lines block_to_string(right, fun, state), "\n  "
+      string = left <> "->\n  " <> adjust_new_lines(block_to_string(right, fun, state), "\n  ")
       fun.(ast, string)
     end)
   end
@@ -948,28 +1059,39 @@ defmodule ExFormat do
   defp block_to_string(other, fun, state), do: to_string(other, fun, state)
 
   defp map_to_string([{:|, _, [update_map, update_args]}], fun, state) do
-    to_string(update_map, fun, state) <> " | " <> map_to_string(update_args, fun, state)
+    to_string(update_map, fun, state) <>
+      " | " <>
+      map_to_string(update_args, fun, state)
   end
 
   defp map_to_string(list, fun, state) do
     cond do
-      Inspect.List.keyword?(list) -> kw_list_to_string(list, fun, state)
-      true -> map_list_to_string(list, fun, state)
+      Inspect.List.keyword?(list) ->
+        kw_list_to_string(list, fun, state)
+      true ->
+        map_list_to_string(list, fun, state)
     end
   end
 
   def fits?(s), do: String.length(s) <= @split_threshold
 
   defp line_breaks?(list) when is_list(list) do
-    Enum.drop(list, 1) |> Enum.any?(fn elem ->
-      value = case elem do
-        {k, v} when is_atom(k) -> v
-        {k, _} -> k
-        v -> v
-      end
+    Enum.drop(list, 1)
+    |> Enum.any?(fn elem ->
+      value =
+        case elem do
+          {k, v} when is_atom(k) ->
+            v
+          {k, _} ->
+            k
+          v ->
+            v
+        end
       case value do
-        {_, meta, _} -> meta[:prev] < meta[:line]
-        _ -> false
+        {_, meta, _} ->
+          meta[:prev] < meta[:line]
+        _ ->
+          false
       end
     end)
   end
@@ -999,21 +1121,26 @@ defmodule ExFormat do
   end
 
   defp list_to_multiline_string(list, _fun, state) do
-    list_string = Enum.map_join(list, ",\n  ", fn value ->
-      elem = adjust_new_lines(to_string(value, fn(_ast, string) -> string end, state), "\n  ")
-      prefix_comments_to_elem(value, elem)
-    end)
+    list_string =
+      Enum.map_join(list, ",\n  ", fn value ->
+        elem = adjust_new_lines(to_string(value, fn _ast, string -> string end, state), "\n  ")
+        prefix_comments_to_elem(value, elem)
+      end)
     "\n  " <> list_string <> ",\n"
   end
 
   defp kw_list_to_string(list, fun, state) do
-    list_string = Enum.map_join(list, ", ", fn {key, value} ->
-      atom_name = case Inspect.Atom.inspect(key) do
-        ":" <> rest -> rest
-        other       -> other
-      end
-      atom_name <> ": " <> to_string(value, fn(_ast, string) -> string end, state)
-    end)
+    list_string =
+      Enum.map_join(list, ", ", fn {key, value} ->
+        atom_name =
+          case Inspect.Atom.inspect(key) do
+            ":" <> rest ->
+              rest
+            other ->
+              other
+          end
+        atom_name <> ": " <> to_string(value, fn _ast, string -> string end, state)
+      end)
     if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
       kw_list_to_multiline_string(list, fun, state)
     else
@@ -1022,24 +1149,32 @@ defmodule ExFormat do
   end
 
   defp kw_list_to_multiline_string(list, _fun, state) do
-    list_string = Enum.map_join(list, ",\n  ", fn {key, value} ->
-      atom_name = case Inspect.Atom.inspect(key) do
-        ":" <> rest -> rest
-        other       -> other
-      end
-      elem = atom_name <> ": " <> adjust_new_lines(to_string(value, fn(_ast, string) -> string end, state), "\n  ")
-      prefix_comments_to_elem(value, elem)
-    end)
+    list_string =
+      Enum.map_join(list, ",\n  ", fn {key, value} ->
+        atom_name =
+          case Inspect.Atom.inspect(key) do
+            ":" <> rest ->
+              rest
+            other ->
+              other
+          end
+        elem =
+          atom_name <>
+          ": " <>
+          adjust_new_lines(to_string(value, fn _ast, string -> string end, state), "\n  ")
+        prefix_comments_to_elem(value, elem)
+      end)
     "\n  " <> list_string <> ",\n"
   end
 
   defp map_list_to_string(list, fun, state) do
-    list_string = Enum.map_join(list, ", ", fn
-      {key, value} ->
-        to_string(key, fun, state) <> " => " <> to_string(value, fun, state)
-      value ->
-        to_string(value, fun, state)
-    end)
+    list_string =
+      Enum.map_join(list, ", ", fn
+        {key, value} ->
+          to_string(key, fun, state) <> " => " <> to_string(value, fun, state)
+        value ->
+          to_string(value, fun, state)
+      end)
     if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
       map_list_to_multiline_string(list, fun, state)
     else
@@ -1048,11 +1183,14 @@ defmodule ExFormat do
   end
 
   defp map_list_to_multiline_string(list, _fun, state) do
-    list_string = Enum.map_join(list, ",\n  ", fn {key, value} ->
-      elem = to_string(key, fn(_ast, string) -> string end, state) <> " => " <>
-        adjust_new_lines(to_string(value, fn(_ast, string) -> string end, state), "\n  ")
-      prefix_comments_to_elem(value, elem)
-    end)
+    list_string =
+      Enum.map_join(list, ",\n  ", fn {key, value} ->
+        elem =
+          to_string(key, fn _ast, string -> string end, state) <>
+          " => " <>
+          adjust_new_lines(to_string(value, fn _ast, string -> string end, state), "\n  ")
+        prefix_comments_to_elem(value, elem)
+      end)
     "\n  " <> list_string <> ",\n"
   end
 
@@ -1066,10 +1204,11 @@ defmodule ExFormat do
   end
 
   defp tuple_to_multiline_string(tuple, _fun, state) do
-    tuple_string = Enum.map_join(tuple, ",\n  ", fn value ->
-      elem = adjust_new_lines(to_string(value, fn(_ast, string) -> string end, state), "\n  ")
-      prefix_comments_to_elem(value, elem)
-    end)
+    tuple_string =
+      Enum.map_join(tuple, ",\n  ", fn value ->
+        elem = adjust_new_lines(to_string(value, fn _ast, string -> string end, state), "\n  ")
+        prefix_comments_to_elem(value, elem)
+      end)
     "\n  " <> tuple_string <> ",\n"
   end
 
@@ -1079,10 +1218,12 @@ defmodule ExFormat do
 
   defp op_to_string({op, _, [_, _]} = expr, fun, parent_op, side, state) when op in unquote(@binary_ops) do
     {parent_assoc, parent_prec} = binary_op_props(parent_op)
-    {_, prec}                   = binary_op_props(op)
+    {_, prec} = binary_op_props(op)
     cond do
-      parent_prec < prec -> to_string(expr, fun, state)
-      parent_prec > prec -> parenthise(expr, fun, state)
+      parent_prec < prec ->
+        to_string(expr, fun, state)
+      parent_prec > prec ->
+        parenthise(expr, fun, state)
       true ->
         # parent_prec == prec, so look at associativity.
         if parent_assoc == side do
@@ -1096,7 +1237,7 @@ defmodule ExFormat do
   defp op_to_string(expr, fun, _, _, state), do: to_string(expr, fun, state)
 
   defp arrow_to_string(pairs, fun, paren \\ false, state) do
-    Enum.map_join(pairs, "; ", fn({:->, _, [left, right]}) ->
+    Enum.map_join(pairs, "; ", fn {:->, _, [left, right]} ->
       left = comma_join_or_empty_paren(left, fun, paren, state)
       left <> "-> " <> to_string(right, fun, state)
     end)
@@ -1124,7 +1265,7 @@ defmodule ExFormat do
     end
   end
 
-  defp comma_join_or_empty_paren([], _fun, true, _state),  do: "() "
+  defp comma_join_or_empty_paren([], _fun, true, _state), do: "() "
   defp comma_join_or_empty_paren([], _fun, false, _state), do: ""
 
   defp comma_join_or_empty_paren(left, fun, _, state) do
@@ -1157,9 +1298,12 @@ defmodule ExFormat do
     char_string = :binary.part(char, 1, byte_size(char) - 2)
     # Special-case some escape codes
     case char_string do
-      "\s" -> "\\s"
-      "<0>" -> "\\0"
-      _ -> char_string
+      " " ->
+        "\\s"
+      "<0>" ->
+        "\\0"
+      _ ->
+        char_string
     end
   end
 
