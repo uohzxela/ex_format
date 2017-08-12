@@ -980,7 +980,7 @@ defmodule ExFormat do
     target_string = call_to_string(target, fun, state)
     args_string = args_to_string(args, fun, state)
     args_string =
-      if not fits?(args_string) do
+      if not fits?(args_string) or line_breaks?(args) do
         delimiter = ",\n#{String.duplicate(" ", String.length(target_string) + 1)}"
         args_to_string(args, fun, delimiter, state)
       else
