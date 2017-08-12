@@ -979,6 +979,12 @@ defmodule ExFormat do
   defp call_to_string_with_args(target, args, fun, state) do
     target_string = call_to_string(target, fun, state)
     args_string = args_to_string(args, fun, state)
+    args_string =
+      if not fits?(args_string) do
+        args_to_string(args, fun, ",\n  ", state)
+      else
+        args_string
+      end
     if parenless_call?(target, args, state) do
       target_string <> " " <> args_string |> String.trim()
     else
