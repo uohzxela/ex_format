@@ -981,7 +981,8 @@ defmodule ExFormat do
     args_string = args_to_string(args, fun, state)
     args_string =
       if not fits?(args_string) do
-        args_to_string(args, fun, ",\n  ", state)
+        delimiter = ",\n#{String.duplicate(" ", String.length(target_string) + 1)}"
+        args_to_string(args, fun, delimiter, state)
       else
         args_string
       end
