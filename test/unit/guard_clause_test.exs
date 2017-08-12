@@ -38,23 +38,39 @@ defmodule ExFormat.Unit.GuardClauseTest do
     end
   end
 
-  test "indentation for multiline guard clauses should be consistent" do
-    assert_format_string """
-    defmacrop f(a)
-              when is_atom(a) and
-                a in @test1 and
-                a in @test2 do
-      something
+  describe "indentation for multiline guard clauses" do
+    test "with binary ops" do
+      assert_format_string """
+        defmacrop f(a)
+                  when is_atom(a) and
+                       a in @test1 and
+                       a in @test2 do
+          something
+        end
+        """
     end
-    """
 
-    assert_format_string """
-    defmacro f(a)
-             when is_atom(a)
-             |> test1()
-             |> test2() do
-      something
+    test "with pipelines" do
+      assert_format_string """
+      defmacro f(a)
+               when is_atom(a)
+                    |> test1()
+                    |> test2() do
+        something
+      end
+      """
     end
-    """
+
+    test "with multiple guards" do
+      assert_format_string """
+      defp valid_identifier_char?(char)
+           when char in ?a..?z
+           when char in ?A..?Z
+           when char in ?0..?9
+           when char == ?_ do
+        true
+      end
+      """
+    end
   end
 end

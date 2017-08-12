@@ -143,6 +143,7 @@ defmodule ExFormat do
       in_tuple?: false,
       in_assignment?: false,
       in_bin_op?: false,
+      in_guard?: false,
       multiline_pipeline?: false,
       multiline_bin_op?: false,
     }
@@ -559,24 +560,35 @@ defmodule ExFormat do
 
   # left when right
   def to_string({:when, meta, [left, right]} = ast, fun, state) do
-    right =
+    state = %{state | in_guard?: true}
+    right_string =
       if right != [] and Keyword.keyword?(right) do
         kw_list_to_string(right, fun, state)
       else
         fun.(right, op_to_string(right, fun, :when, :right, state))
       end
 
-    {padding, newline} =
+    {indentation, newline} =
       if multiline?(ast, state) do
-        token = get_first_token(get_line(ctx[:prev]))
-        {Enum.join(for _ <- 0..String.length(token), do: " "), "\n"}
+        token = get_first_token(get_line(meta[:prev]))
+        {String.duplicate(" ", String.length(token) + 1), "\n"}
       else
         {" ", ""}
       end
+
+    indented_when = "#{indentation}when "
+    multiline_indentation =
+      case right do
+        {:when, _, _} ->
+          ""
+        _ ->
+          String.duplicate(" ", String.length(indented_when))
+      end
     op_to_string(left, fun, :when, :left, state) <>
       newline <>
-      fun.(ast, "#{padding}when " <>
-      right)
+      (fun.(ast, indented_when <>
+      right_string)
+      |> adjust_new_lines("\n#{multiline_indentation}"))
   end
 
   # Multiline-able binary ops
@@ -1254,7 +1266,13 @@ defmodule ExFormat do
     left_string = op_to_string(left, fun, op, :left, state)
     right_string = op_to_string(right, fun, op, :right, state)
     bin_op = if state.multiline_bin_op?, do: " #{op}\n", else: " #{op} "
-    if not state.in_assignment? and not state.in_bin_op? do
+
+    indent? =
+      not state.in_assignment? and
+      not state.in_bin_op? and
+      not state.in_guard?
+
+    if indent? do
       state = %{state | in_bin_op?: true}
       right_string_with_bin_op =
         bin_op <> op_to_string(right, fun, op, :right, state)
