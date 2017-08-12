@@ -156,10 +156,17 @@ defmodule ExFormat.Unit.KeywordListTest do
       """
       assert_format_string(bad, good)
     end
+  end
 
-    test "do not parenthesize keyword list in tuple" do
+  describe "keyword list parens in tuple" do
+    test "only strip parens for keyword list if it is last element in tuple" do
       assert_format_string("{foo, bar, baz: :bong}\n")
       assert_format_string("{foo, bar, [baz: :bong]}", "{foo, bar, baz: :bong}\n")
+    end
+
+    test "do not strip parens for keyword list if it is not last element in tuple" do
+      assert_format_string("{[line: 1], state}\n")
+      assert_format_string("{[line: 1]}\n")
     end
   end
 end

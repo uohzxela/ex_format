@@ -139,7 +139,7 @@ defmodule ExFormat do
       parenless_calls: MapSet.new(@parenless_calls),
       parenless_zero_arity?: false,
       in_spec: nil,
-      in_tuple?: false,
+      last_in_tuple?: false,
       in_assignment?: false,
       in_bin_op?: false,
       in_guard?: false,
@@ -516,7 +516,6 @@ defmodule ExFormat do
 
   # Tuple containers
   def to_string({:{}, _, args} = ast, fun, state) do
-    state = %{state | in_tuple?: true}
     tuple = "{" <> tuple_to_string(args, fun, state) <> "}"
     fun.(ast, tuple)
   end
@@ -783,7 +782,7 @@ defmodule ExFormat do
         {escaped, _} = Inspect.BitString.escape(IO.chardata_to_string(list), ?')
         IO.iodata_to_binary([?', escaped, ?'])
       Inspect.List.keyword?(list) ->
-        if state.in_tuple? do
+        if state.last_in_tuple? do
           kw_list_to_string(list, fun, state)
         else
           "[" <> kw_list_to_string(list, fun, state) <> "]"
@@ -1212,7 +1211,15 @@ defmodule ExFormat do
   end
 
   defp tuple_to_string(tuple, fun, state) do
-    tuple_string = Enum.map_join(tuple, ", ", &to_string(&1, fun, state))
+    {rest, last} = tuple |> :elixir_utils.split_last()
+    last_string = to_string(last, fun, %{state | last_in_tuple?: length(tuple) > 1})
+    rest_string = Enum.map_join(rest, ", ", &to_string(&1, fun, state))
+    tuple_string =
+      if rest_string != "" do
+        "#{rest_string}, #{last_string}"
+      else
+        last_string
+      end
     if not fits?("  " <> tuple_string <> "  ") or line_breaks?(tuple) do
       tuple_to_multiline_string(tuple, fun, state)
     else
