@@ -110,6 +110,8 @@ defmodule ExFormat do
 
   @ampersand_operators [:&, :&&, :&&&]
 
+  @multilineable_bin_ops [:<>, :++, :and, :or]
+
   @parenless_calls [
     :use,
     :import,
@@ -132,11 +134,8 @@ defmodule ExFormat do
     |> postprocess()
   end
 
-  defp prepare_data(file_content) do
-    lines = String.split(file_content, "\n")
-    Agent.start_link(fn -> %{} end, name: :lines)
-    Agent.start_link(fn -> %{} end, name: :inline_comments)
-    state = %{
+  defp initialize_state() do
+    %{
       parenless_calls: MapSet.new(@parenless_calls),
       parenless_zero_arity?: false,
       in_spec: nil,
@@ -147,6 +146,12 @@ defmodule ExFormat do
       multiline_pipeline?: false,
       multiline_bin_op?: false,
     }
+  end
+
+  defp prepare_data(file_content) do
+    lines = String.split(file_content, "\n")
+    Agent.start_link(fn -> %{} end, name: :lines)
+    Agent.start_link(fn -> %{} end, name: :inline_comments)
     for {line, i} <- Enum.with_index(lines) do
       update_line(i + 1, String.trim(line))
       inline_comment_token = extract_inline_comment_token(line)
@@ -161,7 +166,7 @@ defmodule ExFormat do
       end
     end
     {_, ast} = Code.string_to_quoted(file_content, wrap_literals_in_blocks: true)
-    {ast, state}
+    {ast, initialize_state()}
   end
 
   defp preprocess({ast, state}) do
@@ -592,7 +597,7 @@ defmodule ExFormat do
   end
 
   # Multiline-able binary ops
-  def to_string({op, _, [left, right]} = ast, fun, state) when op in [:<>, :++, :and, :or] do
+  def to_string({op, _, [left, right]} = ast, fun, state) when op in @multilineable_bin_ops do
     {left_meta, right_meta} = {get_meta(left), get_meta(right)}
     bin_op_string = bin_op_to_string(ast, fun, state)
 
@@ -1085,7 +1090,7 @@ defmodule ExFormat do
     end
   end
 
-  def fits?(s), do: String.length(s) <= @split_threshold
+  defp fits?(s), do: String.length(s) <= @split_threshold
 
   defp line_breaks?(list) when is_list(list) do
     Enum.drop(list, 1)
@@ -1262,7 +1267,7 @@ defmodule ExFormat do
     fun.(ast, left_string <> pipeline_op <> right_string)
   end
 
-  defp bin_op_to_string({op, _, [left, right]} = ast, fun, state) when op in [:<>, :++, :and, :or] do
+  defp bin_op_to_string({op, _, [left, right]} = ast, fun, state) when op in @multilineable_bin_ops do
     left_string = op_to_string(left, fun, op, :left, state)
     right_string = op_to_string(right, fun, op, :right, state)
     bin_op = if state.multiline_bin_op?, do: " #{op}\n", else: " #{op} "
