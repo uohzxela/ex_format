@@ -11,6 +11,6 @@ defmodule Test.Support.Integration do
   def format_file(file_name) do
   	file_name
   	|> File.read!
-  	|> ExFormat.format_string()
+  	|> ExFormat.format()
   end
 end

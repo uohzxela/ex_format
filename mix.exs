@@ -1,4 +1,4 @@
-defmodule Formatter.Mixfile do
+defmodule ExFormat.Mixfile do
   use Mix.Project
 
   def project do
