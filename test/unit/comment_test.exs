@@ -90,6 +90,7 @@ defmodule ExFormat.Unit.CommentTest do
     end
   end
 
+  @tag :skip
   test "preserves suffix comments" do
     bad = """
     def test() do
@@ -140,7 +141,7 @@ defmodule ExFormat.Unit.CommentTest do
     end
     """
 
-    # assert_format_string(bad, good)
+    assert_format_string(bad, good)
   end
 
   test "preserves inline comments" do
