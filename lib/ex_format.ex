@@ -1,23 +1,25 @@
 import Kernel, except: [to_string: 1]
-import ExFormat.Formatter, only: [to_string_with_comments: 1]
-import ExFormat.State
-import ExFormat.AST
-import ExFormat.Comments
-import ExFormat.Lines
+alias ExFormat.{
+  Formatter,
+  State,
+  AST,
+  Comments,
+  Lines,
+}
 
 defmodule ExFormat do
   def format(string) do
     initialize_stores(string)
-    ast = initialize_ast(string)
-    state = initialize_state()
+    ast = AST.initialize_ast(string)
+    state = %State{}
     {ast, state}
-    |> preprocess()
-    |> to_string_with_comments()
-    |> postprocess()
+    |> AST.preprocess()
+    |> Formatter.to_string_with_comments()
+    |> Comments.postprocess()
   end
 
   defp initialize_stores(string) do
-    initialize_inline_comments_store(string)
-    initialize_lines_store(string)
+    Comments.initialize_inline_comments_store(string)
+    Lines.initialize_lines_store(string)
   end
 end
