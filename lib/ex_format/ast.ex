@@ -1,5 +1,4 @@
-import Kernel, except: [to_string: 1]
-import ExFormat.Comments
+alias ExFormat.Comments
 
 defmodule ExFormat.AST do
   def initialize_ast(string) do
@@ -34,7 +33,7 @@ defmodule ExFormat.AST do
   def update_meta(curr_meta) do
     curr_lineno = curr_meta[:line]
     # TODO: is suffix_newline necessary?
-    [{:suffix_comments, get_suffix_comments(curr_lineno + 1)}] ++
+    [{:suffix_comments, Comments.get_suffix_comments(curr_lineno + 1)}] ++
       curr_meta
   end
 
@@ -43,8 +42,8 @@ defmodule ExFormat.AST do
     prev_lineno = prev_meta[:line]
 
     [{:prev, prev_lineno}] ++
-      [{:prefix_comments, get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
-      [{:prefix_newline, get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
+      [{:prefix_comments, Comments.get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
+      [{:prefix_newline, Comments.get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
       curr_meta
   end
 

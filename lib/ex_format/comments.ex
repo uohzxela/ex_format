@@ -1,4 +1,4 @@
-import ExFormat.Lines
+alias ExFormat.Lines
 
 defmodule ExFormat.Comments do
   def initialize_inline_comments_store(string) do
@@ -82,16 +82,16 @@ defmodule ExFormat.Comments do
   end
 
   def get_prefix_newline(curr, prev \\ 0) do
-    if curr >= prev and get_line(curr) == "", do: "\n", else: ""
+    if curr >= prev and Lines.get_line(curr) == "", do: "\n", else: ""
   end
 
   def get_prefix_comments(curr, prev) when curr < prev, do: ""
 
   def get_prefix_comments(curr, prev) do
-    case get_line(curr) do
+    case Lines.get_line(curr) do
       "#" <> comment ->
         comment = get_prefix_newline(curr - 1, prev) <> "#" <> comment <> "\n"
-        clear_line(curr) # clear current comment to avoid duplicates
+        Lines.clear_line(curr) # clear current comment to avoid duplicates
         get_prefix_comments(curr - 1, prev) <> comment
       "" ->
         get_prefix_comments(curr - 1, prev)
@@ -101,10 +101,10 @@ defmodule ExFormat.Comments do
   end
 
   def get_suffix_comments(curr) do
-    case get_line(curr) do
+    case Lines.get_line(curr) do
       "#" <> comment ->
         comment = "\n" <> get_prefix_newline(curr - 1) <> "#" <> comment
-        clear_line(curr)
+        Lines.clear_line(curr)
         comment <> get_suffix_comments(curr + 1)
       "" ->
         get_suffix_comments(curr + 1)
