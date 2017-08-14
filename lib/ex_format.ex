@@ -15,6 +15,8 @@ defmodule ExFormat do
     |> AST.preprocess()
     |> Formatter.to_string_with_comments()
     |> Comments.postprocess()
+  after
+    Agent.stop(:lines)
   end
 
   defp initialize_stores(string) do
