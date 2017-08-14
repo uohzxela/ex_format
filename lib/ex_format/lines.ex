@@ -4,7 +4,6 @@ defmodule ExFormat.Lines do
   end
 
   def start_link(code_string) do
-    Agent.start_link(fn -> %{} end, name: :lines)
     lines_map =
       code_string
       |> String.split("\n")
@@ -13,8 +12,7 @@ defmodule ExFormat.Lines do
         {i + 1, String.trim(line)}
       end)
       |> Map.new
-
-    Agent.update(:lines, &Map.merge(&1, lines_map))
+    Agent.start_link(fn -> lines_map end, name: :lines)
   end
 
   def get_line(k), do: Agent.get(:lines, &Map.get(&1, k))
