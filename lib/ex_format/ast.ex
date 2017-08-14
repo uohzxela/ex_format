@@ -1,6 +1,6 @@
-alias ExFormat.Comments
-
 defmodule ExFormat.AST do
+  alias ExFormat.Comments
+
   def initialize_ast(string) do
     {_, ast} = Code.string_to_quoted(string, wrap_literals_in_blocks: true)
     ast

@@ -1,10 +1,9 @@
-import Kernel, except: [to_string: 1]
-alias ExFormat.{
-  Helpers,
-  AST,
-}
-
 defmodule ExFormat.Formatter do
+  alias ExFormat.{
+    Helpers,
+    AST,
+  }
+
   @typedoc "Abstract Syntax Tree (AST)"
   @type t :: expr | {t, t} | atom | number | binary | pid | fun | [t]
   @type expr :: {expr | atom, Keyword.t, atom | [t]}
