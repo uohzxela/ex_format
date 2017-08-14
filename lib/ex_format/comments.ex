@@ -1,8 +1,12 @@
-alias ExFormat.Lines
-
 defmodule ExFormat.Comments do
-  def initialize_inline_comments_store(string) do
-  	lines = String.split(string, "\n")
+  alias ExFormat.Lines
+
+  def initialize_inline_comments_store(code_string) do
+    start_link(code_string)
+  end
+
+  def start_link(code_string) do
+    lines = String.split(code_string, "\n")
     Agent.start_link(fn -> %{} end, name: :inline_comments)
     for {line, _i} <- Enum.with_index(lines) do
       inline_comment_token = extract_inline_comment_token(line)

@@ -1,6 +1,6 @@
-alias ExFormat.Lines
-
 defmodule ExFormat.Helpers do
+  alias ExFormat.Lines
+
   def get_first_token(lineno) do
     lineno
     |> Lines.get_line()

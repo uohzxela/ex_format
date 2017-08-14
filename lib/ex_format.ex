@@ -1,13 +1,12 @@
-import Kernel, except: [to_string: 1]
-alias ExFormat.{
-  Formatter,
-  State,
-  AST,
-  Comments,
-  Lines,
-}
-
 defmodule ExFormat do
+  alias ExFormat.{
+    Formatter,
+    State,
+    AST,
+    Comments,
+    Lines,
+  }
+
   def format(string) do
     initialize_stores(string)
     ast = AST.initialize_ast(string)
