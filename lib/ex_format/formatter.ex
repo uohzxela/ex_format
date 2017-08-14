@@ -1,6 +1,8 @@
 import Kernel, except: [to_string: 1]
-import ExFormat.Helpers
-import ExFormat.AST
+alias ExFormat.{
+  Helpers,
+  AST,
+}
 
 defmodule ExFormat.Formatter do
   @typedoc "Abstract Syntax Tree (AST)"
@@ -155,7 +157,7 @@ defmodule ExFormat.Formatter do
       {:__block__, meta, [_expr]} ->
         to_string_with_comments({ast, state}) =~ "\n" or
           meta != [] and
-          (has_suffix_comments(meta[:line] + 1) or
+          (Helpers.has_suffix_comments(meta[:line] + 1) or
           meta[:line] != meta[:prev])
       {:__block__, _, _} ->
         true
@@ -345,7 +347,7 @@ defmodule ExFormat.Formatter do
 
     {indentation, newline} =
       if multiline?(ast, state) do
-        token = get_first_token(meta[:prev])
+        token = Helpers.get_first_token(meta[:prev])
         {String.duplicate(" ", String.length(token) + 1), "\n"}
       else
         {" ", ""}
@@ -842,7 +844,7 @@ defmodule ExFormat.Formatter do
   end
 
   defp block_to_string({:__block__, meta, [expr]}, fun, state) do
-    ast = {:__block__, update_meta(meta), [expr]}
+    ast = {:__block__, AST.update_meta(meta), [expr]}
     to_string(ast, fun, state)
   end
 

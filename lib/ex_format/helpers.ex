@@ -1,17 +1,16 @@
-import Kernel, except: [to_string: 1]
-import ExFormat.Lines
+alias ExFormat.Lines
 
 defmodule ExFormat.Helpers do
   def get_first_token(lineno) do
     lineno
-    |> get_line()
+    |> Lines.get_line()
     |> String.trim_leading()
     |> String.split()
     |> List.first()
   end
 
   def has_suffix_comments(curr) do
-    case get_line(curr) do
+    case Lines.get_line(curr) do
       "#" <> _ ->
         true
       "" ->
