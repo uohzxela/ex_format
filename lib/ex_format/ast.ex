@@ -20,8 +20,8 @@ defmodule ExFormat.AST do
 
   defp handle_accumulator({sym, curr_meta, args} = ast, prev_meta, state) do
     if curr_meta != [] and prev_meta != [] do
-      new_meta = update_meta(curr_meta, prev_meta)
-      {{sym, new_meta, args}, {new_meta, state}}
+      {new_meta, new_state} = update_meta(curr_meta, prev_meta, state)
+      {{sym, new_meta, args}, {new_meta, new_state}}
     else
       {ast, {prev_meta, state}}
     end
@@ -31,21 +31,25 @@ defmodule ExFormat.AST do
     {ast, {prev_meta, state}}
   end
 
-  def update_meta(curr_meta) do
+  def update_meta(curr_meta, state) do
     curr_lineno = curr_meta[:line]
     # TODO: is suffix_newline necessary?
-    [{:suffix_comments, Comments.get_suffix_comments(curr_lineno + 1)}] ++
-      curr_meta
+    {suffix_comments, new_state} = Comments.get_suffix_comments(curr_lineno + 1, state)
+    new_meta = [{:suffix_comments, suffix_comments}] ++ curr_meta
+    {new_meta, new_state}
   end
 
-  def update_meta(curr_meta, prev_meta) do
+  def update_meta(curr_meta, prev_meta, state) do
     curr_lineno = curr_meta[:line]
     prev_lineno = prev_meta[:line]
-
-    [{:prev, prev_lineno}] ++
-      [{:prefix_comments, Comments.get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
-      [{:prefix_newline, Comments.get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
+    {prefix_comments, new_state} = Comments.get_prefix_comments(curr_lineno - 1, prev_lineno, state)
+    prefix_newline = Comments.get_prefix_newline(curr_lineno - 1, prev_lineno, new_state)
+    new_meta =
+      [{:prev, prev_lineno}] ++
+      [{:prefix_comments, prefix_comments}] ++
+      [{:prefix_newline, prefix_newline}] ++
       curr_meta
+    {new_meta, new_state}
   end
 
   @defs [:def, :defp, :defmacro, :defmacrop, :defdelegate]

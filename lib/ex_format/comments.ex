@@ -1,8 +1,6 @@
 defmodule ExFormat.Comments do
   @moduledoc false
 
-  alias ExFormat.Lines
-
   def initialize_inline_comments_store(code_string) do
     start_link(code_string)
   end
@@ -87,35 +85,37 @@ defmodule ExFormat.Comments do
     formatted <> "\n"
   end
 
-  def get_prefix_newline(curr, prev \\ 0) do
-    if curr >= prev and Lines.get_line(curr) == "", do: "\n", else: ""
+  def get_prefix_newline(curr, prev, state) do
+    if curr >= prev and state.lines[curr] == "", do: "\n", else: ""
   end
 
-  def get_prefix_comments(curr, prev) when curr < prev, do: ""
+  def get_prefix_comments(curr, prev, state) when curr < prev, do: {"", state}
 
-  def get_prefix_comments(curr, prev) do
-    case Lines.get_line(curr) do
+  def get_prefix_comments(curr, prev, state) do
+    case state.lines[curr] do
       "#" <> comment ->
-        comment = get_prefix_newline(curr - 1, prev) <> "#" <> comment <> "\n"
-        Lines.clear_line(curr) # clear current comment to avoid duplicates
-        get_prefix_comments(curr - 1, prev) <> comment
+        comment = get_prefix_newline(curr - 1, prev, state) <> "#" <> comment <> "\n"
+        state = put_in(state.lines[curr], nil)
+        {prefix_comments, state} = get_prefix_comments(curr - 1, prev, state)
+        {prefix_comments <> comment, state}
       "" ->
-        get_prefix_comments(curr - 1, prev)
+        get_prefix_comments(curr - 1, prev, state)
       _ ->
-        ""
+        {"", state}
     end
   end
 
-  def get_suffix_comments(curr) do
-    case Lines.get_line(curr) do
+  def get_suffix_comments(curr, state) do
+    case state.lines[curr] do
       "#" <> comment ->
-        comment = "\n" <> get_prefix_newline(curr - 1) <> "#" <> comment
-        Lines.clear_line(curr)
-        comment <> get_suffix_comments(curr + 1)
+        comment = "\n" <> get_prefix_newline(curr - 1, 0, state) <> "#" <> comment
+        state = put_in(state.lines[curr], nil)
+        {suffix_comments, state} = get_suffix_comments(curr + 1, state)
+        {comment <> suffix_comments, state}
       "" ->
-        get_suffix_comments(curr + 1)
+        get_suffix_comments(curr + 1, state)
       _ ->
-        ""
+        {"", state}
     end
   end
 end
