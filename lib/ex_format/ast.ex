@@ -1,9 +1,10 @@
 defmodule ExFormat.AST do
+  @moduledoc false
+
   alias ExFormat.Comments
 
   def initialize_ast(string) do
-    {_, ast} = Code.string_to_quoted(string, wrap_literals_in_blocks: true)
-    ast
+    Code.string_to_quoted!(string, wrap_literals_in_blocks: true)
   end
 
   def preprocess({ast, state}) do

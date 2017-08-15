@@ -35,6 +35,6 @@ defmodule ExFormat.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:ex_doc, "~> 0.14", only: :dev, runtime: false}]
   end
 end

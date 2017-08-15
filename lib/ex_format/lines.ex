@@ -1,4 +1,6 @@
 defmodule ExFormat.Lines do
+  @moduledoc false
+
   def initialize_lines_store(code_string) do
    start_link(code_string)
   end
@@ -18,4 +20,6 @@ defmodule ExFormat.Lines do
   def get_line(k), do: Agent.get(:lines, &Map.get(&1, k))
 
   def clear_line(k), do: Agent.update(:lines, &Map.put(&1, k, nil))
+
+  def purge_lines_store(), do: Agent.stop(:lines)
 end

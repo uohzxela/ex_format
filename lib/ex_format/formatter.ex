@@ -1,4 +1,6 @@
 defmodule ExFormat.Formatter do
+  @moduledoc false
+
   alias ExFormat.{
     Helpers,
     AST,

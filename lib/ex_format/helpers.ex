@@ -1,4 +1,6 @@
 defmodule ExFormat.Helpers do
+  @moduledoc false
+
   alias ExFormat.Lines
 
   def get_first_token(lineno) do
