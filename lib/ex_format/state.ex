@@ -1,7 +1,10 @@
 defmodule ExFormat.State do
   @moduledoc false
 
-  alias ExFormat.Comments
+  alias ExFormat.{
+    Comments,
+    Lines,
+  }
 
   @parenless_calls [
     :use,
@@ -33,18 +36,8 @@ defmodule ExFormat.State do
 
   def initialize_state(code_string) do
     %ExFormat.State{
-      lines: initialize_lines_map(code_string),
+      lines: Lines.initialize_lines_map(code_string),
       inline_comments: Comments.initialize_inline_comments_map(code_string),
     }
-  end
-
-  defp initialize_lines_map(code_string) do
-    code_string
-    |> String.split("\n")
-    |> Enum.with_index()
-    |> Enum.map(fn {line, i} ->
-      {i + 1, String.trim(line)}
-    end)
-    |> Map.new
   end
 end
