@@ -1,48 +1,42 @@
 defmodule ExFormat.Comments do
   @moduledoc false
 
-  def initialize_inline_comments_store(code_string) do
-    start_link(code_string)
-  end
-
-  def start_link(code_string) do
+  def initialize_inline_comments_map(code_string) do
     lines = String.split(code_string, "\n")
-    Agent.start_link(fn -> %{} end, name: :inline_comments)
-    for {line, _i} <- Enum.with_index(lines) do
+    Enum.reduce(lines, %{}, fn line, acc ->
       inline_comment_token = extract_inline_comment_token(line)
-
       if inline_comment_token do
         {_, {_, start_col, _}, inline_comment} = inline_comment_token
-        fingerprint =
-          line
-          |> String.slice(0..start_col)
-          |> get_line_fingerprint()
-        if fingerprint != "", do: update_inline_comments(fingerprint, inline_comment)
-      end
-    end
-  end
-
-  def update_inline_comments(k, v) do
-    Agent.update(:inline_comments, fn map ->
-      if Map.has_key?(map, k) do
-        val = Map.get(map, k)
-        Map.put(map, k, val ++ [v])
+        fingerprint = String.slice(line, 0..start_col) |> get_line_fingerprint()
+        update_inline_comments(acc, fingerprint, inline_comment)
       else
-        Map.put(map, k, [v])
+        acc
       end
     end)
   end
 
-  def get_inline_comments(k) do
-    vals = Agent.get(:inline_comments, fn map -> Map.get(map, k) end)
-    case vals do
+  defp update_inline_comments(inline_comments, k, _v) when k == "" do
+    inline_comments
+  end
+
+  defp update_inline_comments(inline_comments, k, v) do
+    if Map.has_key?(inline_comments, k) do
+      val = Map.get(inline_comments, k)
+      Map.put(inline_comments, k, val ++ [v])
+    else
+      Map.put(inline_comments, k, [v])
+    end
+  end
+
+  defp get_inline_comments(state, k) do
+    case state.inline_comments[k] do
       nil ->
-        ""
+        {"", state}
       [] ->
-        ""
+        {"", state}
       [v | rest] ->
-        Agent.update(:inline_comments, fn map -> Map.put(map, k, rest) end)
-        " " <> String.Chars.to_string(v)
+        new_state = put_in(state.inline_comments[k], rest)
+        {" " <> String.Chars.to_string(v), new_state}
     end
   end
 
@@ -68,21 +62,26 @@ defmodule ExFormat.Comments do
     Enum.join(String.split(line, ~r/\W+/))
   end
 
-  def get_lineno(nil), do: nil
-  def get_lineno(token) do
+  defp get_lineno(nil), do: nil
+  defp get_lineno(token) do
     {lineno, _, _} = elem(token, 1)
     lineno
   end
 
-  def postprocess(formatted) do
-    formatted_lines = String.split(formatted, "\n")
-    formatted =
-      Enum.map_join(formatted_lines, "\n", fn line ->
+  def postprocess(formatted_string, state) do
+    formatted_lines = String.split(formatted_string, "\n")
+    {postprocessed, _state} =
+      Enum.reduce(formatted_lines, {nil, state}, fn line, {acc, state} ->
         line = String.trim_trailing(line)
         fingerprint = get_line_fingerprint(line)
-        line <> get_inline_comments(fingerprint)
+        {inline_comments, new_state} = get_inline_comments(state, fingerprint)
+        if acc == nil do
+          {line <> inline_comments, new_state}
+        else
+          {acc <> "\n" <> line <> inline_comments, new_state}
+        end
       end)
-    formatted <> "\n"
+    postprocessed <> "\n"
   end
 
   def get_prefix_newline(curr, prev, state) do
