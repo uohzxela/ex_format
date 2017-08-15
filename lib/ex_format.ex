@@ -23,10 +23,6 @@ defmodule ExFormat do
   """
   @spec format(String.t) :: String.t
   def format(code_string) do
-    format_string(code_string)
-  end
-
-  defp format_string(code_string) do
     ast = AST.initialize_ast(code_string)
     state = State.initialize_state(code_string)
     {ast, state}
