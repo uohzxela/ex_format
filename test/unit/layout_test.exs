@@ -193,4 +193,20 @@ defmodule ExFormat.Unit.LayoutTest do
       """
     end
   end
+
+  test "preservation of prefix newline" do
+    good = """
+
+    f()
+    """
+    assert_format_string(good)
+
+    bad = """
+
+
+
+    f()
+    """
+    assert_format_string(bad, good)
+  end
 end

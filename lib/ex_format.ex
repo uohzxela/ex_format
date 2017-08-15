@@ -27,12 +27,11 @@ defmodule ExFormat do
   end
 
   defp format_string(code_string) do
-    Comments.initialize_inline_comments_store(code_string)
     ast = AST.initialize_ast(code_string)
     state = State.initialize_state(code_string)
     {ast, state}
     |> AST.preprocess()
     |> Formatter.to_string_with_comments()
-    |> Comments.postprocess()
+    |> Comments.postprocess(state)
   end
 end
