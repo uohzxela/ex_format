@@ -10,7 +10,6 @@ defmodule ExFormat do
     State,
     AST,
     Comments,
-    Lines,
   }
 
   @doc ~S"""
@@ -25,22 +24,15 @@ defmodule ExFormat do
   @spec format(String.t) :: String.t
   def format(code_string) do
     format_string(code_string)
-  after
-    Lines.purge_lines_store()
   end
 
   defp format_string(code_string) do
-    initialize_stores(code_string)
+    Comments.initialize_inline_comments_store(code_string)
     ast = AST.initialize_ast(code_string)
-    state = %State{}
+    state = State.initialize_state(code_string)
     {ast, state}
     |> AST.preprocess()
     |> Formatter.to_string_with_comments()
     |> Comments.postprocess()
-  end
-
-  defp initialize_stores(string) do
-    Comments.initialize_inline_comments_store(string)
-    Lines.initialize_lines_store(string)
   end
 end

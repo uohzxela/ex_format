@@ -25,5 +25,20 @@ defmodule ExFormat.State do
     in_guard?: false,
     multiline_pipeline?: false,
     multiline_bin_op?: false,
+    lines: nil,
   ]
+
+  def initialize_state(code_string) do
+    %ExFormat.State{lines: initialize_lines_store(code_string)}
+  end
+
+  defp initialize_lines_store(code_string) do
+    code_string
+    |> String.split("\n")
+    |> Enum.with_index()
+    |> Enum.map(fn {line, i} ->
+      {i + 1, String.trim(line)}
+    end)
+    |> Map.new
+  end
 end

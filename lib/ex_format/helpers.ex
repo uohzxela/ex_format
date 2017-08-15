@@ -1,22 +1,19 @@
 defmodule ExFormat.Helpers do
   @moduledoc false
 
-  alias ExFormat.Lines
-
-  def get_first_token(lineno) do
-    lineno
-    |> Lines.get_line()
+  def get_first_token(lineno, state) do
+    state.lines[lineno]
     |> String.trim_leading()
     |> String.split()
     |> List.first()
   end
 
-  def has_suffix_comments(curr) do
-    case Lines.get_line(curr) do
+  def has_suffix_comments(curr, state) do
+    case state.lines[curr] do
       "#" <> _ ->
         true
       "" ->
-        has_suffix_comments(curr + 1)
+        has_suffix_comments(curr + 1, state)
       _ ->
         false
     end
