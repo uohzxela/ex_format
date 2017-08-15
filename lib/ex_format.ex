@@ -16,44 +16,14 @@ defmodule ExFormat do
   @doc ~S"""
   Formats the given code string.
 
-  It returns a tuple containing the formatted code string, as well as
-  information about whether the code string was formatted successfully or not.
-
-  ## Examples
-      iex> ExFormat.format("   quote(do:  foo.bar(1,2,     3))")
-      {:ok, "quote do: foo.bar(1, 2, 3)\\n"}
-
-      iex> ExFormat.format("   quote(do:foo.bar(1,2,     3))")
-      {:error, "nofile:1: keyword argument must be followed by space after: do:"}
-  """
-  @spec format(String.t) :: {:ok, String.t} | {:error, String.t}
-  def format(code_string) do
-    {:ok, format_string(code_string)}
-  rescue
-    e in SyntaxError ->
-      {:error, Exception.message(e)}
-    e in RuntimeError ->
-      error_msg = """
-      Error during formatting, please file a bug report at github.com/uohzxela/ex_format/issues.
-
-      #{Exception.message(e)}
-      """
-      {:error, error_msg}
-  after
-    Lines.purge_lines_store()
-  end
-
-  @doc ~S"""
-  Formats the given code string, throwing an exception in the event of failure.
-
   If the formatting is successful, it returns the formatted code string. Otherwise, it will throw an exception.
 
   ## Examples
-      iex> ExFormat.format!("   quote(do:  foo.bar(1,2,     3))")
+      iex> ExFormat.format("   quote(do:  foo.bar(1,2,     3))")
       "quote do: foo.bar(1, 2, 3)\\n"
   """
-  @spec format!(String.t) :: String.t
-  def format!(code_string) do
+  @spec format(String.t) :: String.t
+  def format(code_string) do
     format_string(code_string)
   after
     Lines.purge_lines_store()
@@ -62,7 +32,7 @@ defmodule ExFormat do
   defp format_string(code_string) do
     initialize_stores(code_string)
     ast = AST.initialize_ast(code_string)
-    state = %State{} 
+    state = %State{}
     {ast, state}
     |> AST.preprocess()
     |> Formatter.to_string_with_comments()
