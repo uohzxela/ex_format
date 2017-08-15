@@ -1,4 +1,6 @@
 defmodule ExFormat.Comments do
+  @moduledoc false
+
   alias ExFormat.Lines
 
   def initialize_inline_comments_store(code_string) do

@@ -1,4 +1,6 @@
 defmodule ExFormat.State do
+  @moduledoc false
+
   @parenless_calls [
     :use,
     :import,
