@@ -6,15 +6,13 @@ defmodule Mix.Tasks.Format do
   @shortdoc "Formats Elixir source code"
 
   def run(file_paths) do
-    Enum.map(file_paths, fn file_path ->
+    Enum.each(file_paths, fn file_path ->
       formatted =
         file_path
         |> File.read!()
         |> ExFormat.format()
-      file = File.open!(file_path, [:write])
-      IO.binwrite(file, formatted)
-      File.close(file)
-      IO.puts("Formatted #{file_path}")
+      File.write!(file_path, formatted)
+      Mix.shell().info("Formatted #{file_path}")
     end)
   end
 end
