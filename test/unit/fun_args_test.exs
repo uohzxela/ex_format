@@ -3,6 +3,7 @@ defmodule ExFormat.Unit.FunArgsTest do
   use ExUnit.Case
 
   describe "split function call args if they are too long" do
+    @tag :skip
     test "with remote calls" do
       bad = "Enum.map_join(some_very_long_function_name1(args), some_very_long_function_name2(delimiter), &to_string(&1, fun, state))"
       good = """
@@ -13,6 +14,7 @@ defmodule ExFormat.Unit.FunArgsTest do
       assert_format_string(bad, good)
     end
 
+    @tag :skip
     test "with local calls" do
       bad = "local_call(some_very_long_function_name1(args), some_very_long_function_name2(delimiter), &to_string(&1, fun, state))"
       good = """
@@ -25,6 +27,7 @@ defmodule ExFormat.Unit.FunArgsTest do
   end
 
   describe "split function call args if they have intended line break" do
+    @tag :skip
     test "with remote calls" do
       bad = """
       Enum.map_join(args,
@@ -38,6 +41,7 @@ defmodule ExFormat.Unit.FunArgsTest do
       assert_format_string(bad, good)
     end
 
+    @tag :skip
     test "with local calls" do
       bad = """
       local_call(args, delimiter,

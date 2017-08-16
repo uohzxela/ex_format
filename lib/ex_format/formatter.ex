@@ -753,13 +753,7 @@ defmodule ExFormat.Formatter do
   defp call_to_string_with_args(target, args, fun, state) do
     target_string = call_to_string(target, fun, state)
     args_string = args_to_string(args, fun, state)
-    args_string =
-      if not fits?(args_string) or line_breaks?(args) do
-        delimiter = ",\n#{String.duplicate(" ", String.length(target_string) + 1)}"
-        args_to_string(args, fun, delimiter, state)
-      else
-        args_string
-      end
+
     if parenless_call?(target, args, state) do
       target_string <> " " <> args_string |> String.trim()
     else
@@ -908,9 +902,13 @@ defmodule ExFormat.Formatter do
     end
   end
 
+  defp split?(list, string) do
+    length(list) > 1 and (not fits?("  " <> string <> "  ") or line_breaks?(list))
+  end
+
   defp list_to_string(list, fun, state) do
     list_string = Enum.map_join(list, ", ", &to_string(&1, fun, state))
-    if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
+    if split?(list, list_string) do
       list_to_multiline_string(list, fun, state)
     else
       list_string
@@ -938,7 +936,7 @@ defmodule ExFormat.Formatter do
           end
         atom_name <> ": " <> to_string(value, fn _ast, string -> string end, state)
       end)
-    if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
+    if split?(list, list_string) do
       kw_list_to_multiline_string(list, fun, state)
     else
       list_string
@@ -972,7 +970,7 @@ defmodule ExFormat.Formatter do
         value ->
           to_string(value, fun, state)
       end)
-    if not fits?("  " <> list_string <> "  ") or line_breaks?(list) do
+    if split?(list, list_string) do
       map_list_to_multiline_string(list, fun, state)
     else
       list_string
@@ -1001,7 +999,7 @@ defmodule ExFormat.Formatter do
       else
         last_string
       end
-    if not fits?("  " <> tuple_string <> "  ") or line_breaks?(tuple) do
+    if split?(tuple, tuple_string) do
       tuple_to_multiline_string(tuple, fun, state)
     else
       tuple_string
