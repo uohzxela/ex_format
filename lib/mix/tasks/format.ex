@@ -3,7 +3,7 @@ defmodule Mix.Tasks.Format do
 
   alias ExFormat
 
-  @shortdoc "Formats the given code string"
+  @shortdoc "Formats Elixir source code"
 
   def run(file_paths) do
     Enum.map(file_paths, fn file_path ->
