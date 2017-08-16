@@ -20,12 +20,7 @@ defmodule ExFormat.Comments do
   end
 
   defp update_inline_comments(inline_comments, k, v) do
-    if Map.has_key?(inline_comments, k) do
-      val = Map.get(inline_comments, k)
-      Map.put(inline_comments, k, val ++ [v])
-    else
-      Map.put(inline_comments, k, [v])
-    end
+    Map.update(inline_comments, k, [v], &(&1 ++ [v]))
   end
 
   defp get_inline_comments(state, k) do
