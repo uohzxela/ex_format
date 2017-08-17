@@ -111,4 +111,8 @@ defmodule ExFormat.Unit.TupleTest do
       """
     end
   end
+
+  test "empty tuple" do
+    assert_format_string("{}\n")
+  end
 end

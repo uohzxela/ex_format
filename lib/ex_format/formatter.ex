@@ -1,3 +1,5 @@
+require IEx
+
 defmodule ExFormat.Formatter do
   @moduledoc false
 
@@ -989,6 +991,8 @@ defmodule ExFormat.Formatter do
       end)
     "\n  " <> list_string <> ",\n"
   end
+
+  defp tuple_to_string(tuple, _fun, _state) when tuple == [], do: ""
 
   defp tuple_to_string(tuple, fun, state) do
     {rest, last} = tuple |> :elixir_utils.split_last()
