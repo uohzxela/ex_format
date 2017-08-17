@@ -1,8 +1,6 @@
 defmodule Mix.Tasks.Format do
   use Mix.Task
 
-  alias ExFormat
-
   @shortdoc "Formats Elixir source code"
 
   def run(file_paths) do
