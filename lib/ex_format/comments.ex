@@ -35,7 +35,6 @@ defmodule ExFormat.Comments do
     end
   end
 
-
   defp extract_inline_comment_token(line) do
     {_, _, _, tokens} = :elixir_tokenizer.tokenize(to_charlist(line), 0,
       preserve_comments: true, check_terminators: false)
@@ -63,7 +62,7 @@ defmodule ExFormat.Comments do
     lineno
   end
 
-  def postprocess(formatted_string, state) do
+  def postprocess({formatted_string, state}) do
     formatted_lines = String.split(formatted_string, "\n")
     {postprocessed, _state} =
       Enum.reduce(formatted_lines, {nil, state}, fn line, {acc, state} ->
@@ -76,7 +75,39 @@ defmodule ExFormat.Comments do
           {acc <> "\n" <> line <> inline_comments, new_state}
         end
       end)
-    postprocessed <> "\n"
+    postprocessed <> "\n" <> get_remaining_comments(state)
+  end
+
+  defp get_remaining_comments(state) do
+    lines_of_code =
+      state.lines
+      |> Enum.sort()
+      |> Enum.map(&elem(&1, 1))
+
+    last_line_of_code_index =
+      lines_of_code
+      |> Enum.reverse()
+      |> Enum.find_index(fn x ->
+        case x do
+          "#" <> _ ->
+            false
+          "" ->
+            false
+          _ ->
+            true
+        end
+      end)
+
+    remaining_comments =
+      lines_of_code
+      |> Enum.slice(length(lines_of_code) - last_line_of_code_index..-1)
+      |> Enum.map_join("\n", &(&1))
+
+    if remaining_comments != "" do
+      String.trim_trailing(remaining_comments) <> "\n"
+    else
+      remaining_comments
+    end
   end
 
   def get_prefix_newline(curr, prev, state) do

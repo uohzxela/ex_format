@@ -134,7 +134,7 @@ defmodule ExFormat.Formatter do
             string
         end
       end
-    to_string(ast, fun, state)
+    {to_string(ast, fun, state), state}
   end
 
   defp parenless_zero_arity?(args, state), do: state.parenless_zero_arity? and args == []
@@ -158,7 +158,8 @@ defmodule ExFormat.Formatter do
   defp multiline?(ast, state) do
     case ast do
       {:__block__, meta, [_expr]} ->
-        to_string_with_comments({ast, state}) =~ "\n" or
+        {string_with_comments, _state} = to_string_with_comments({ast, state})
+        string_with_comments =~ "\n" or
           meta != [] and
           (Helpers.has_suffix_comments(meta[:line] + 1, state) or
           meta[:line] != meta[:prev])
@@ -184,7 +185,7 @@ defmodule ExFormat.Formatter do
       arg_meta != [] and tuple_meta != [] ->
         arg_meta[:line] == tuple_meta[:line]
       true ->
-        tuple_string = to_string_with_comments({tuple, state})
+        {tuple_string, _state} = to_string_with_comments({tuple, state})
         not(tuple_string =~ "\n") and fits?(tuple_string)
     end
   end

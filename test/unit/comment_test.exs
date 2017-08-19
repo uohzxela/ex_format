@@ -214,4 +214,75 @@ defmodule ExFormat.Unit.CommentTest do
       assert_format_string("@moduledoc false\n")
     end
   end
+
+  describe "preserves remaining comments after last line of code" do
+    test "with config.exs sample file" do
+      assert_format_string """
+      # This file is responsible for configuring your application
+      # and its dependencies with the aid of the Mix.Config module.
+      use Mix.Config
+
+      # This configuration is loaded before any dependency and is restricted
+      # to this project. If another project depends on this project, this
+      # file won't be loaded nor affect the parent project. For this reason,
+      # if you want to provide default values for your application for
+      # 3rd-party users, it should be done in your "mix.exs" file.
+
+      # You can configure for your application as:
+      #
+      #     config :formatter, key: :value
+      #
+      # And access this configuration in your application as:
+      #
+      #     Application.get_env(:formatter, :key)
+      #
+      # Or configure a 3rd-party app:
+      #
+      #     config :logger, level: :info
+      #
+
+      # It is also possible to import configuration files, relative to this
+      # directory. For example, you can emulate configuration per environment
+      # by uncommenting the line below and defining dev.exs, test.exs and such.
+      # Configuration from the imported file will override the ones defined
+      # here (which is why it is important to import them last).
+      #
+      #     import_config "#{Mix.env}.exs"
+      """
+    end
+
+    test "stray newlines are removed after remaining comments" do
+      bad = """
+      use Mix.Config
+
+      # comment
+
+
+
+
+      """
+      good = """
+      use Mix.Config
+
+      # comment
+      """
+
+      assert_format_string(bad, good)
+    end
+
+    test "variable newlines are preserved between last line of code and remaining comments" do
+      assert_format_string """
+      use Mix.Config
+
+
+
+      # comment
+      """
+
+      assert_format_string """
+      use Mix.Config
+      # comment
+      """
+    end
+  end
 end

@@ -28,6 +28,6 @@ defmodule ExFormat do
     {ast, state}
     |> AST.preprocess()
     |> Formatter.to_string_with_comments()
-    |> Comments.postprocess(state)
+    |> Comments.postprocess()
   end
 end
