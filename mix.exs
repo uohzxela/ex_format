@@ -1,13 +1,17 @@
 defmodule ExFormat.Mixfile do
   use Mix.Project
 
-  def project do
-    [app: :ex_format,
-     version: "0.1.0",
-     elixir: "~> 1.4",
-     elixirc_paths: elixirc_paths(Mix.env),
-     start_permanent: Mix.env == :prod,
-     deps: deps()]
+  def project() do
+    [
+      app: :ex_format,
+      version: "0.1.0",
+      elixir: "~> 1.5",
+      escript: [main_module: ExFormat.CLI],
+      build_embedded: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
+      start_permanent: Mix.env() == :prod,
+      deps: deps(),
+    ]
   end
 
   defp elixirc_paths(:test) do
@@ -21,7 +25,7 @@ defmodule ExFormat.Mixfile do
   # Configuration for the OTP application
   #
   # Type "mix help compile.app" for more information
-  def application do
+  def application() do
     [applications: [:logger]]
   end
 
@@ -34,7 +38,7 @@ defmodule ExFormat.Mixfile do
   #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
   #
   # Type "mix help deps" for more examples and options
-  defp deps do
+  defp deps() do
     [{:ex_doc, "~> 0.16", only: :dev}]
   end
 end
