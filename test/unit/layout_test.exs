@@ -110,15 +110,6 @@ defmodule ExFormat.Unit.LayoutTest do
       """
     end
 
-    test "do not assign on next line for multiline tuples" do
-      assert_format_string """
-      tuple = {
-        MyApp.Repo,
-        MyApp.Endpoint,
-      }
-      """
-    end
-
     test "do not assign on next line for multiline structs" do
       assert_format_string """
       foo = %User{

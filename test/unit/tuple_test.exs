@@ -7,91 +7,19 @@ defmodule ExFormat.Unit.TupleTest do
       assert_format_string("{:ok, :test, :test, :test}\n")
     end
 
-    test "split if tuple is too long even though it has no line break" do
-      bad = """
+    test "do not split if tuple is too long" do
+      assert_format_string """
       {:ok, :test, :test, :test, :ok, :test, :test, :test, :ok, :test, :test, :test, :ok, :test, :test, :test, :ok, :test, :test, :test}
       """
-      good = """
-      {
-        :ok,
-        :test,
-        :test,
-        :test,
-        :ok,
-        :test,
-        :test,
-        :test,
-        :ok,
-        :test,
-        :test,
-        :test,
-        :ok,
-        :test,
-        :test,
-        :test,
-        :ok,
-        :test,
-        :test,
-        :test,
-      }
-      """
-      assert_format_string(bad, good)
     end
 
-    test "split if tuple has intended line break" do
+    test "do not split if tuple has intended line break" do
       bad = """
       {:ok,
       :test}
       """
       good = """
-      {
-        :ok,
-        :test,
-      }
-      """
-      assert_format_string(bad, good)
-    end
-
-    test "with complex example" do
-      bad = """
-      {:ok,
-      # comment 1
-      :lets_have_some, {:inner, :tuples!},
-      # comment 2
-      # comment 3
-      :are_you, {:ready_to_have, "more and more", "tuples", {"nested",
-      # comment 4
-      "close", "together", {:is_this,
-       123123, "possible?"}}},
-      "last element standing"} # inline comment 2
-      """
-      good = """
-      {
-        :ok,
-        # comment 1
-        :lets_have_some,
-        {:inner, :tuples!},
-        # comment 2
-        # comment 3
-        :are_you,
-        {
-          :ready_to_have,
-          "more and more",
-          "tuples",
-          {
-            "nested",
-            # comment 4
-            "close",
-            "together",
-            {
-              :is_this,
-              123_123,
-              "possible?",
-            },
-          },
-        },
-        "last element standing", # inline comment 2
-      }
+      {:ok, :test}
       """
       assert_format_string(bad, good)
     end

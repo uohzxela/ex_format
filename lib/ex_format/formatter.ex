@@ -340,7 +340,7 @@ defmodule ExFormat.Formatter do
   end
 
   # left when right
-  def to_string({:when, meta, [left, right]} = ast, fun, state) do
+  def to_string({:when, _meta, [left, right]} = ast, fun, state) do
     state = %{state | in_guard?: true}
     right_string =
       if right != [] and Keyword.keyword?(right) do
@@ -520,8 +520,8 @@ defmodule ExFormat.Formatter do
 
   # foo.{bar, baz}
   def to_string({{:., _, [left, :{}]}, _, args} = ast, fun, state) do
-    tupleized = {:{}, [], args}
-    fun.(ast, to_string(left, fun, state) <> "." <> to_string(tupleized, fun, state))
+    tuple_string = "{" <> list_to_string(args, fun, state) <> "}"
+    fun.(ast, to_string(left, fun, state) <> "." <> tuple_string)
   end
 
   # All other calls
@@ -1003,26 +1003,11 @@ defmodule ExFormat.Formatter do
     {rest, last} = tuple |> :elixir_utils.split_last()
     last_string = to_string(last, fun, %{state | last_in_tuple?: length(tuple) > 1})
     rest_string = Enum.map_join(rest, ", ", &to_string(&1, fun, state))
-    tuple_string =
-      if rest_string != "" do
-        "#{rest_string}, #{last_string}"
-      else
-        last_string
-      end
-    if split?(tuple, tuple_string) do
-      tuple_to_multiline_string(tuple, fun, state)
+    if rest_string != "" do
+      "#{rest_string}, #{last_string}"
     else
-      tuple_string
+      last_string
     end
-  end
-
-  defp tuple_to_multiline_string(tuple, _fun, state) do
-    tuple_string =
-      Enum.map_join(tuple, ",\n  ", fn value ->
-        elem = adjust_new_lines(to_string(value, fn _ast, string -> string end, state), "\n  ")
-        prefix_comments_to_elem(value, elem)
-      end)
-    "\n  " <> tuple_string <> ",\n"
   end
 
   defp parenthise(expr, fun, state) do
