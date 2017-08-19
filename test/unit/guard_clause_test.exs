@@ -73,4 +73,61 @@ defmodule ExFormat.Unit.GuardClauseTest do
       """
     end
   end
+
+  describe "indentation for guard clause on same line as function definition" do
+    test "with binary ops" do
+      assert_format_string """
+        defmacrop f(a) when is_atom(a) and
+                            a in @test1 and
+                            a in @test2 do
+          something
+        end
+        """
+    end
+
+    test "with pipelines" do
+      assert_format_string """
+      defmacro f(a) when is_atom(a)
+                         |> test1()
+                         |> test2() do
+        something
+      end
+      """
+    end
+
+    test "with multiple guards" do
+      bad = """
+      defp valid_identifier_char?(char) when char in ?a..?z
+                                        when char in ?A..?Z
+                                        when char in ?0..?9
+                                        when char == ?_ do
+        true
+      end
+      """
+
+      good = """
+      defp valid_identifier_char?(char)
+           when char in ?a..?z
+           when char in ?A..?Z
+           when char in ?0..?9
+           when char == ?_ do
+        true
+      end
+      """
+
+      assert_format_string(bad, good)
+    end
+
+    test "with case statements" do
+      assert_format_string """
+      case o do
+        oooooo when o in [
+                      :<-,
+                      :<-,
+                    ] ->
+          true
+      end
+      """
+    end
+  end
 end

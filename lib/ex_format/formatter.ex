@@ -88,17 +88,17 @@ defmodule ExFormat.Formatter do
       o when o in [:<, :<=, :>=, :>] ->
         {:left, 160}
       o when o in [
-        :|>,
-        :<<<,
-        :>>>,
-        :<~,
-        :~>,
-        :<<~,
-        :~>>,
-        :<~>,
-        :<|>,
-        :^^^,
-      ] ->
+               :|>,
+               :<<<,
+               :>>>,
+               :<~,
+               :~>,
+               :<<~,
+               :~>>,
+               :<~>,
+               :<|>,
+               :^^^,
+             ] ->
         {:left, 170}
       :in ->
         {:left, 180}
@@ -347,28 +347,23 @@ defmodule ExFormat.Formatter do
       else
         fun.(right, op_to_string(right, fun, :when, :right, state))
       end
+    left_string = op_to_string(left, fun, :when, :left, state)
 
-    {indentation, newline} =
-      if multiline?(ast, state) do
-        token = Helpers.get_first_token(meta[:prev], state)
-        {String.duplicate(" ", String.length(token) + 1), "\n"}
-      else
-        {" ", ""}
+    {space_or_newline, indentation} =
+      cond do
+        elem(right, 0) == :when ->
+          {"\n", ""}
+        multiline?(ast, state) ->
+          {"\n", String.duplicate(" ", String.length("when "))}
+        true ->
+          {" ", String.duplicate(" ", String.length(left_string <> " when "))}
       end
 
-    indented_when = "#{indentation}when "
-    multiline_indentation =
-      case right do
-        {:when, _, _} ->
-          ""
-        _ ->
-          String.duplicate(" ", String.length(indented_when))
-      end
-    op_to_string(left, fun, :when, :left, state) <>
-      newline <>
-      (fun.(ast, indented_when <>
+    left_string <>
+      space_or_newline <>
+      (fun.(ast, "when " <>
       right_string)
-      |> adjust_new_lines("\n#{multiline_indentation}"))
+      |> adjust_new_lines("\n#{indentation}"))
   end
 
   # Multiline-able binary ops
@@ -756,10 +751,19 @@ defmodule ExFormat.Formatter do
     target_string = call_to_string(target, fun, state)
     args_string = args_to_string(args, fun, state)
 
-    if parenless_call?(target, args, state) do
-      target_string <> " " <> args_string |> String.trim()
-    else
-      target_string <> "(" <> args_string <> ")"
+    call_string_with_args =
+      if parenless_call?(target, args, state) do
+        target_string <> " " <> args_string |> String.trim()
+      else
+        target_string <> "(" <> args_string <> ")"
+      end
+
+    case args do
+      [{:when, _, _}] ->
+        call_string_with_args
+        |> adjust_new_lines("\n#{String.duplicate(" ", String.length(target_string) + 1)}")
+      _ ->
+        call_string_with_args
     end
   end
 
