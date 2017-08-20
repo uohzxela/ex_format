@@ -32,8 +32,9 @@ defmodule ExFormat.CLI do
   """
   def run(file_paths) do
     Enum.each(file_paths, fn file_path ->
+      IO.write("Formatting #{file_path} ... ")
       Mix.Tasks.Format.format_file(file_path)
-      IO.puts("Formatted #{file_path}")
+      IO.puts("done.")
     end)
   end
 end
