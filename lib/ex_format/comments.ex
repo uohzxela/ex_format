@@ -49,6 +49,9 @@ defmodule ExFormat.Comments do
       |> Enum.to_list()
       |> List.first()
     if token, do: elem(token, 0), else: token
+  rescue
+    _ ->
+      nil
   end
 
   defp get_line_fingerprint(line) do
@@ -84,7 +87,8 @@ defmodule ExFormat.Comments do
       |> Enum.sort()
       |> Enum.map(&elem(&1, 1))
 
-    last_line_of_code_index =
+    # last line of code index
+    last_loc_index =
       lines_of_code
       |> Enum.reverse()
       |> Enum.find_index(fn x ->
@@ -98,9 +102,11 @@ defmodule ExFormat.Comments do
         end
       end)
 
+    last_loc_index = if last_loc_index, do: last_loc_index, else: 1
+
     remaining_comments =
       lines_of_code
-      |> Enum.slice(length(lines_of_code) - last_line_of_code_index..-1)
+      |> Enum.slice(length(lines_of_code) - last_loc_index..-1)
       |> Enum.map_join("\n", &(&1))
 
     if remaining_comments != "" do

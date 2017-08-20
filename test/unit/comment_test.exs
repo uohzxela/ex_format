@@ -285,4 +285,11 @@ defmodule ExFormat.Unit.CommentTest do
       """
     end
   end
+
+  test "comments with unicode characters" do
+    assert_format_string """
+    something
+    # José
+    """
+  end
 end
