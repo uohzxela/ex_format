@@ -4,7 +4,7 @@ ExFormat formats Elixir source code according to a standard set of rules based o
 
 ## Installation
 
-As ExFormat works best with the unreleased Elixir v1.6, it is recommended to install ExFormat's escript (which embeds Elixir v1.6 in itself) and run it as an executable.
+As ExFormat works best with the unreleased Elixir v1.6, it is recommended to download the prebuilt escript (which embeds Elixir v1.6 in itself) and run it as an executable.
 
 ```
 mix escript.install https://github.com/uohzxela/ex_format/raw/master/ex_format 
