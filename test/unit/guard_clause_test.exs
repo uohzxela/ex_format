@@ -131,7 +131,27 @@ defmodule ExFormat.Unit.GuardClauseTest do
     end
   end
 
-  test "guard clause in type specs" do
-    assert_format_string "@spec var(var, context) :: {var, [], context} when var: atom, context: atom\n"
+  describe "guard clause in type specs" do
+    test "when guard clause is on same line as type spec" do
+       assert_format_string "@spec var(var, context) :: {var, [], context} when var: atom, context: atom\n"
+    end
+
+    @tag :skip
+    test "when guard clause is on different line as type spec" do
+      assert_format_string """
+      @spec flat_map_reduce(t, acc, fun) :: {[any], any}
+            when fun: (element, acc -> {t, acc} | {:halt, acc}),
+                 acc: any
+
+      @spec send(dest, msg, [option]) :: :ok | :noconnect | :nosuspend
+            when dest: pid | port | atom | {atom, node},
+                 msg: any,
+                 option: :noconnect | :nosuspend
+
+      @spec transform(Enumerable.t, acc, fun) :: Enumerable.t
+            when fun: (element, acc -> {Enumerable.t, acc} | {:halt, acc}),
+                 acc: any
+      """
+    end
   end
 end

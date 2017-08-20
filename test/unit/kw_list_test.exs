@@ -168,5 +168,12 @@ defmodule ExFormat.Unit.KeywordListTest do
       assert_format_string("{[line: 1], state}\n")
       assert_format_string("{[line: 1]}\n")
     end
+
+    @tag :skip
+    test "do not de-parenthesize inner kw lists in tuples" do
+      assert_format_string """
+      {Enum.join(paths, ":"), exclude: [:test], include: [line: line]}
+      """
+    end
   end
 end
