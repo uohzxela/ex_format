@@ -31,6 +31,10 @@ defmodule ExFormat.AST do
     {ast, {prev_meta, state}}
   end
 
+  def update_meta(curr_meta, state) when curr_meta == [] do
+    {curr_meta, state}
+  end
+
   def update_meta(curr_meta, state) do
     curr_lineno = curr_meta[:line]
     # TODO: is suffix_newline necessary?
