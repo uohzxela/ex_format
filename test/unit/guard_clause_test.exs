@@ -130,4 +130,8 @@ defmodule ExFormat.Unit.GuardClauseTest do
       """
     end
   end
+
+  test "guard clause in type specs" do
+    assert_format_string "@spec var(var, context) :: {var, [], context} when var: atom, context: atom\n"
+  end
 end

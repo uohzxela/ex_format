@@ -352,7 +352,7 @@ defmodule ExFormat.Formatter do
 
     {space_or_newline, indentation} =
       cond do
-        elem(right, 0) == :when ->
+        is_tuple(right) and elem(right, 0) == :when ->
           {"\n", ""}
         multiline?(ast, state) ->
           {"\n", String.duplicate(" ", String.length("when "))}
