@@ -741,7 +741,7 @@ defmodule ExFormat.Formatter do
     <<?:, ?\", args::binary, ?\">>
   end
 
-  defp call_to_string_with_args(target, args, fun, state) when target in [:with, :for, :defstruct] do
+  defp call_to_string_with_args(target, args, fun, state) when target in [:with, :for, :defstruct, :defoverridable] do
     target_string = Atom.to_string(target) <> " "
     delimiter = ",\n#{String.duplicate(" ", String.length(target_string))}"
     args_string = args_to_string(args, fun, delimiter, state) |> String.trim()

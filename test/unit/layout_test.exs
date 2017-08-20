@@ -185,6 +185,35 @@ defmodule ExFormat.Unit.LayoutTest do
     end
   end
 
+  describe "defoverridable" do
+    test "multiline defoverridable" do
+      assert_format_string """
+      defoverridable merge: 2,
+                     merge: 3,
+                     equal?: 2,
+                     to_list: 1,
+                     keys: 1,
+                     values: 1,
+                     take: 2,
+                     drop: 2,
+                     get: 2,
+                     get: 3,
+                     fetch!: 2,
+                     has_key?: 2,
+                     put_new: 3,
+                     pop: 2,
+                     pop: 3,
+                     split: 2,
+                     update: 4,
+                     update!: 3,
+                     get_and_update: 3,
+                     get_lazy: 3,
+                     pop_lazy: 3,
+                     put_new_lazy: 3
+      """
+    end
+  end
+
   test "preservation of prefix newline" do
     good = """
 
