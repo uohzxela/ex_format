@@ -151,7 +151,6 @@ defmodule ExFormat.Unit.GuardClauseTest do
       """
     end
 
-    @tag :skip
     test "when guard clause contains Type.t, it shouldn't be parenthesized" do
       assert_format_string """
       @spec transform(Enumerable.t, acc, fun) :: Enumerable.t
