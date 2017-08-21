@@ -85,13 +85,13 @@ defmodule ExFormat.Unit.IndentationTest do
 
       bad = """
       [{:prev, prev_lineno}] ++
-      [{:prefix_comments, get_prefix_comments(curr_lineno-1, prev_lineno)}] ++
-      [{:prefix_newline, get_prefix_newline(curr_lineno-1, prev_lineno)}] ++ curr_ctx
+      [{:prefix_comments, get_prefix_comments()}] ++
+      [{:prefix_newline, get_prefix_newline()}] ++ curr_ctx
       """
       good = """
       [{:prev, prev_lineno}] ++
-        [{:prefix_comments, get_prefix_comments(curr_lineno - 1, prev_lineno)}] ++
-        [{:prefix_newline, get_prefix_newline(curr_lineno - 1, prev_lineno)}] ++
+        [{:prefix_comments, get_prefix_comments()}] ++
+        [{:prefix_newline, get_prefix_newline()}] ++
         curr_ctx
       """
       assert_format_string(bad, good)
@@ -214,6 +214,17 @@ defmodule ExFormat.Unit.IndentationTest do
       test2 and test3 or test4 or test5
       """
       assert_format_string(bad, good)
+    end
+
+    test "split every arithmetic operator if there's line break in the operation" do
+      assert_format_string """
+      Integer.floor_div(previous_year, 4) -
+        Integer.floor_div(previous_year, 100) +
+        Integer.floor_div(previous_year, 400) +
+        previous_year *
+        @days_per_nonleap_year /
+        @days_per_leap_year
+      """
     end
   end
 

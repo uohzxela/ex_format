@@ -118,7 +118,7 @@ defmodule ExFormat.Formatter do
 
   @ampersand_operators [:&, :&&, :&&&]
 
-  @multilineable_bin_ops [:<>, :++, :and, :or]
+  @multilineable_bin_ops [:<>, :++, :and, :or, :+, :-, :/, :*]
 
   def to_string_with_comments({ast, state}) do
     fun =
@@ -374,7 +374,7 @@ defmodule ExFormat.Formatter do
   # Multiline-able binary ops
   def to_string({op, _, [left, right]} = ast, fun, state) when op in @multilineable_bin_ops do
     {left_meta, right_meta} = {get_meta(left), get_meta(right)}
-    bin_op_string = bin_op_to_string(ast, fun, state)
+    bin_op_string = bin_op_to_string(ast, fn _ast, string -> string end, state)
 
     multiline? =
       state.multiline_bin_op? or
