@@ -6,6 +6,7 @@ defmodule ExFormat.Formatter do
   alias ExFormat.{
     Helpers,
     AST,
+    State,
   }
 
   @typedoc "Abstract Syntax Tree (AST)"
@@ -345,6 +346,9 @@ defmodule ExFormat.Formatter do
     right_string =
       if right != [] and Keyword.keyword?(right) do
         kw_list_to_string(right, fun, state)
+        |> String.trim()
+        |> String.replace_suffix(",", "")
+        |> readjust_new_lines("\n")
       else
         fun.(right, op_to_string(right, fun, :when, :right, state))
       end
@@ -355,9 +359,9 @@ defmodule ExFormat.Formatter do
         is_tuple(right) and elem(right, 0) == :when ->
           {"\n", ""}
         multiline?(ast, state) ->
-          {"\n", String.duplicate(" ", String.length("when "))}
+          {"\n", generate_spaces("when ")}
         true ->
-          {" ", String.duplicate(" ", String.length(left_string <> " when "))}
+          {" ", generate_spaces(left_string <> " when ")}
       end
 
     left_string <>
@@ -486,6 +490,7 @@ defmodule ExFormat.Formatter do
   @def_spec_calls [:spec, :callback, :macrocallback]
   # Strip parens for calls prefixed with @
   def to_string({:@ = op, _, [{target, _, _} = arg]} = ast, fun, state) do
+    state = State.push_context(state, :@)
     state = %{state | parenless_calls: MapSet.put(state.parenless_calls, target)}
     state =
       cond do
@@ -743,7 +748,8 @@ defmodule ExFormat.Formatter do
 
   defp call_to_string_with_args(target, args, fun, state) when target in [:with, :for, :defstruct, :defoverridable] do
     target_string = Atom.to_string(target) <> " "
-    delimiter = ",\n#{String.duplicate(" ", String.length(target_string))}"
+    spaces_after_newline = generate_spaces(target_string)
+    delimiter = ",\n#{spaces_after_newline}"
     args_string = args_to_string(args, fun, delimiter, state) |> String.trim()
     target_string <> args_string
   end
@@ -761,8 +767,10 @@ defmodule ExFormat.Formatter do
 
     case args do
       [{:when, _, _}] ->
+        extra_spaces = if State.prev_context(state) == :@, do: 2, else: 1
+        spaces_after_newline = generate_spaces(target_string, extra_spaces)
         call_string_with_args
-        |> adjust_new_lines("\n#{String.duplicate(" ", String.length(target_string) + 1)}")
+        |> adjust_new_lines("\n#{spaces_after_newline}")
       _ ->
         call_string_with_args
     end
@@ -1084,6 +1092,16 @@ defmodule ExFormat.Formatter do
         <<x>>
       end
     end
+  end
+
+  defp readjust_new_lines(block, replacement) do
+    block
+    |> String.split("\n")
+    |> Enum.map_join(replacement, &(String.trim(&1)))
+  end
+
+  defp generate_spaces(string, extra \\ 0) do
+    String.duplicate(" ", String.length(string) + extra)
   end
 
   # Only underscore decimals that have six or more digits
