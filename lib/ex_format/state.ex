@@ -32,6 +32,7 @@ defmodule ExFormat.State do
     multiline_bin_op?: false,
     lines: nil,
     inline_comments: nil,
+    context: [],
   ]
 
   def initialize_state(code_string) do
@@ -39,5 +40,23 @@ defmodule ExFormat.State do
       lines: Lines.initialize_lines_map(code_string),
       inline_comments: Comments.initialize_inline_comments_map(code_string),
     }
+  end
+
+  @doc """
+  Push an AST symbol into the context stack.
+  """
+  def push_context(state, ast_sym) do
+    %{state | context: [ast_sym | state.context]}
+  end
+
+  @doc """
+  Peek at the AST symbol at the top of the context stack.
+  """
+  def prev_context(%ExFormat.State{context: []}) do
+    nil
+  end
+
+  def prev_context(state) do
+    List.first(state.context)
   end
 end
