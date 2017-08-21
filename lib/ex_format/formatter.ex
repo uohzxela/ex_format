@@ -420,15 +420,14 @@ defmodule ExFormat.Formatter do
   # Spec op
   def to_string({::: = op, _, [left, right]} = ast, fun, state) do
     # Strip parens for all 0-arity terms (in this context, they are types)
-    new_state = %{state | parenless_zero_arity?: true}
     left =
       case handle_left_spec_op(left, state) do
         {_, _, []} = left ->
-          op_to_string(left, fun, op, :left, state)
+          op_to_string(left, fun, op, :left, %{state | parenless_zero_arity?: false})
         _ ->
-          op_to_string(left, fun, op, :left, new_state)
+          op_to_string(left, fun, op, :left, state)
       end
-    right = op_to_string(right, fun, op, :right, new_state)
+    right = op_to_string(right, fun, op, :right, state)
     fun.(ast, left <> " #{op} " <> right)
   end
 
@@ -495,9 +494,9 @@ defmodule ExFormat.Formatter do
     state =
       cond do
         target in @type_spec_calls ->
-          %{state | in_spec: :type}
+          %{state | in_spec: :type, parenless_zero_arity?: true}
         target in @def_spec_calls ->
-          %{state | in_spec: :def}
+          %{state | in_spec: :def, parenless_zero_arity?: true}
         true ->
           state
       end
