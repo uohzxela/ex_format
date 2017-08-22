@@ -15,7 +15,6 @@ defmodule ExFormat.AST do
           |> handle_parenless_call(state)
         handle_accumulator(ast, prev_meta, state)
       end)
-    # IO.inspect ast
     {ast, state}
   end
 
