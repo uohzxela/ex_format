@@ -174,6 +174,10 @@ defmodule ExFormat.Unit.KeywordListTest do
       assert_format_string """
       {Enum.join(paths, ":"), exclude: [:test], include: [line: line]}
       """
+
+      assert_format_string """
+      {:::, [line: line], [{name, [line: line], []}]}
+      """
     end
   end
 end
