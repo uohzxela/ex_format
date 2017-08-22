@@ -528,6 +528,7 @@ defmodule ExFormat.Formatter do
     fun.(ast, to_string(left, fun, state) <> "." <> tuple_string)
   end
 
+  @list_based_structures [:list, :tuple, :arg_list, :kw_list]
   # All other calls
   def to_string({target, _, args} = ast, fun, state) when is_list(args) do
     state = State.push_context(state, target)
@@ -541,13 +542,8 @@ defmodule ExFormat.Formatter do
             call_to_string_with_args(target, list, fun, state) <>
             kw_blocks_to_string(last, fun, list, state)
 
-          if !(call_string =~ "\n") and target in [:quote, :if] do
-            arg_list_string =
-              args_to_string(list, fun, state) <>
-              kw_blocks_to_string(last, fun, list, state)
-              |> String.trim()
-              |> parenthise()
-            Atom.to_string(target) <> arg_list_string
+          if State.has_context?(state, @list_based_structures) do
+            call_string |> parenthise()
           else
             call_string
           end
@@ -789,10 +785,12 @@ defmodule ExFormat.Formatter do
   end
 
   defp args_to_string(args, fun, state) do
+    state = State.push_context(state, :arg_list)
     args_to_string(args, fun, ", ", state)
   end
 
   defp args_to_string(args, fun, delimiter, state) do
+    state = State.push_context(state, :arg_list)
     {list, last} = :elixir_utils.split_last(args)
     if last != [] and Inspect.List.keyword?(last) do
       prefix =
@@ -935,6 +933,7 @@ defmodule ExFormat.Formatter do
   end
 
   defp list_to_string(list, fun, state) do
+    state = State.push_context(state, :list)
     list_string = Enum.map_join(list, ", ", &to_string(&1, fun, state))
     if split?(list, list_string) do
       list_to_multiline_string(list, fun, state)
@@ -953,6 +952,7 @@ defmodule ExFormat.Formatter do
   end
 
   defp kw_list_to_string(list, fun, state) do
+    state = State.push_context(state, :kw_list)
     list_string =
       Enum.map_join(list, ", ", fn {key, value} ->
         atom_name =
@@ -1020,6 +1020,7 @@ defmodule ExFormat.Formatter do
   defp tuple_to_string(tuple, _fun, _state) when tuple == [], do: ""
 
   defp tuple_to_string(tuple, fun, state) do
+    state = State.push_context(state, :tuple)
     {rest, last} = tuple |> :elixir_utils.split_last()
     last_string = to_string(last, fun, %{state | last_in_tuple?: length(tuple) > 1})
     rest_string = Enum.map_join(rest, ", ", &to_string(&1, fun, state))

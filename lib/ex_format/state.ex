@@ -62,6 +62,12 @@ defmodule ExFormat.State do
   @doc """
   Check if AST symbol exists in the context stack.
   """
+  def has_context?(state, list) when is_list(list) do
+    Enum.any?(list, fn ast_sym ->
+      Enum.member?(state.context, ast_sym)
+    end)
+  end
+
   def has_context?(state, ast_sym) do
     Enum.member?(state.context, ast_sym)
   end
