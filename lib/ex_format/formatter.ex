@@ -537,8 +537,20 @@ defmodule ExFormat.Formatter do
       {list, last} = :elixir_utils.split_last(args)
       fun.(ast, case kw_blocks?(last) do
         true ->
-          call_to_string_with_args(target, list, fun, state) <>
+          call_string =
+            call_to_string_with_args(target, list, fun, state) <>
             kw_blocks_to_string(last, fun, list, state)
+
+          if !(call_string =~ "\n") and target in [:quote, :if] do
+            arg_list_string =
+              args_to_string(list, fun, state) <>
+              kw_blocks_to_string(last, fun, list, state)
+              |> String.trim()
+              |> parenthise()
+            Atom.to_string(target) <> arg_list_string
+          else
+            call_string
+          end
         false ->
           call_to_string_with_args(target, args, fun, state)
       end)
@@ -1020,6 +1032,10 @@ defmodule ExFormat.Formatter do
 
   defp parenthise(expr, fun, state) do
     "(" <> to_string(expr, fun, state) <> ")"
+  end
+
+  defp parenthise(string) when is_binary(string) do
+    "(" <> string <> ")"
   end
 
   defp op_to_string({op, _, [_, _]} = expr, fun, parent_op, side, state) when op in unquote(@binary_ops) do
