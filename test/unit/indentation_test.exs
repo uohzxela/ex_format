@@ -134,6 +134,33 @@ defmodule ExFormat.Unit.IndentationTest do
       assert_format_string(bad, good)
     end
 
+    test "correct indentation of binary op in case statement when assigning" do
+      assert_format_string """
+      something =
+        case something do
+          this ->
+            "string1" <>
+              "string2"
+          _ ->
+            "string1" <>
+              "string2"
+        end
+      """
+    end
+
+    test "correct indentation of binary op in if/else statement when assigning" do
+      assert_format_string """
+      something =
+        if something do
+          "string1" <>
+            "string2"
+        else
+          "string1" <>
+            "string2"
+        end
+      """
+    end
+
     test "split every <> operator if there's line break in the operation" do
       good = """
       "test1" <>

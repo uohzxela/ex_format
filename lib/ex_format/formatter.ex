@@ -407,7 +407,7 @@ defmodule ExFormat.Formatter do
 
   # Assignment op
   def to_string({:= = op, _, [left, right]} = ast, fun, state) do
-    state = %{state | in_assignment?: true}
+    state = State.push_context(state, :=)
     left_op_string = op_to_string(left, fun, op, :left, state)
     right_op_string = op_to_string(right, fun, op, :right, state)
     if assign_on_next_line?(right) and right_op_string =~ "\n" do
@@ -530,6 +530,7 @@ defmodule ExFormat.Formatter do
 
   # All other calls
   def to_string({target, _, args} = ast, fun, state) when is_list(args) do
+    state = State.push_context(state, target)
     if sigil = sigil_call(ast, fun, state) do
       sigil
     else
@@ -766,7 +767,7 @@ defmodule ExFormat.Formatter do
 
     case args do
       [{:when, _, _}] ->
-        extra_spaces = if State.prev_context(state) == :@, do: 2, else: 1
+        extra_spaces = if State.has_context?(state, :@), do: 2, else: 1
         spaces_after_newline = generate_spaces(target_string, extra_spaces)
         call_string_with_args
         |> adjust_new_lines("\n#{spaces_after_newline}")
@@ -1061,7 +1062,7 @@ defmodule ExFormat.Formatter do
     bin_op = if state.multiline_bin_op?, do: " #{op}\n", else: " #{op} "
 
     indent? =
-      not state.in_assignment? and
+      State.prev_context(state) != := and
       not state.in_bin_op? and
       not state.in_guard?
 

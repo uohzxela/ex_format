@@ -25,7 +25,6 @@ defmodule ExFormat.State do
     parenless_zero_arity?: false,
     in_spec: nil,
     last_in_tuple?: false,
-    in_assignment?: false,
     in_bin_op?: false,
     in_guard?: false,
     multiline_pipeline?: false,
@@ -58,5 +57,12 @@ defmodule ExFormat.State do
 
   def prev_context(state) do
     List.first(state.context)
+  end
+
+  @doc """
+  Check if AST symbol exists in the context stack.
+  """
+  def has_context?(state, ast_sym) do
+    Enum.member?(state.context, ast_sym)
   end
 end
