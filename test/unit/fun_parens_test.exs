@@ -216,77 +216,21 @@ defmodule ExFormat.Unit.FunParensTest do
     end
   end
 
-  describe "keep parens for calls with do block, if they are inside list/tuple/arguments" do
-    @tag :skip
-    test "for calls in list" do
-      assert_format_string """
-        id: opts[:id] || __MODULE__,
-        start: Macro.escape(opts[:start]) || quote(do: {__MODULE__, :start_link, [arg]}),
-        restart: opts[:restart] || :permanent,
-        shutdown: opts[:shutdown] || 5000,
-        type: :worker,
-      ]
-      """
-
-      assert_format_string """
-      [last <> if(value, do: "=" <> value, else: "")]
-      """
+  @tag :skip
+  test "edge cases for function definitions" do
+    assert_format_string """
+    @spec (+value) :: value when value: number
+    def (+value) do
+      :erlang.+(value)
     end
+    """
 
-    @tag :skip
-    test "for calls in tuple" do
-      assert_format_string """
-      {:ok, div(size, bytes) + if(rem(size, bytes) == 0, do: 0, else: 1)}
-      """
-
-      assert_format_string """
-      {:::, [line: line], [{name, [line: line], []}, quote(do: term)]}
-      """
-
-      assert_format_string """
-      :ets.insert(table, {
-        doc_tuple,
-        line,
-        kind,
-        merge_signatures(current_sign, signature, 1),
-        if(is_nil(doc), do: current_doc, else: doc)
-      })
-      """
-
-      assert_format_string """
-      {:ok, for(file <- files, hd(file) != ?., do: file)}
-      """
+    assert_format_string """
+    if @fallback_to_any do
+      Kernel.defp any_impl_for(), do: __MODULE__.Any.__impl__(:target)
+    else
+      Kernel.defp any_impl_for(), do: nil
     end
-
-    @tag :skip
-    test "for function definitions" do
-      assert_format_string """
-      @spec (+value) :: value when value: number
-      def (+value) do
-        :erlang.+(value)
-      end
-      """
-
-      assert_format_string """
-      if @fallback_to_any do
-        Kernel.defp any_impl_for(), do: __MODULE__.Any.__impl__(:target)
-      else
-        Kernel.defp any_impl_for(), do: nil
-      end
-      """
-    end
-
-    @tag :skip
-    test "for calls in arg list" do
-      assert_format_string """
-      do_setup(quote(do: _), block)
-      """
-
-      assert_format_string """
-      defmacro test(message, var \\ quote(do: _), contents) do
-        something
-      end
-      """
-    end
+    """
   end
 end
