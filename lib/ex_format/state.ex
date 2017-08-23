@@ -42,14 +42,14 @@ defmodule ExFormat.State do
   end
 
   @doc """
-  Push an AST symbol into the context stack.
+  Push a context layer into the context stack.
   """
-  def push_context(state, ast_sym) do
-    %{state | context: [ast_sym | state.context]}
+  def push_context(state, ctx) do
+    %{state | context: [ctx | state.context]}
   end
 
   @doc """
-  Peek at the AST symbol at the top of the context stack.
+  Peek at the topmost context at the top of the context stack.
   """
   def prev_context(%ExFormat.State{context: []}) do
     nil
@@ -60,15 +60,15 @@ defmodule ExFormat.State do
   end
 
   @doc """
-  Check if AST symbol exists in the context stack.
+  Check if the given context exists in the context stack.
   """
   def has_context?(state, list) when is_list(list) do
-    Enum.any?(list, fn ast_sym ->
-      Enum.member?(state.context, ast_sym)
+    Enum.any?(list, fn ctx ->
+      Enum.member?(state.context, ctx)
     end)
   end
 
-  def has_context?(state, ast_sym) do
-    Enum.member?(state.context, ast_sym)
+  def has_context?(state, ctx) do
+    Enum.member?(state.context, ctx)
   end
 end

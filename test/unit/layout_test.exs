@@ -36,7 +36,7 @@ defmodule ExFormat.Unit.LayoutTest do
         |> Enum.partition(&File.exists?/1)
       """
       assert_format_string(bad, good)
-    end 
+    end
 
     test "assign on next line for case statements" do
       bad = """
@@ -210,6 +210,17 @@ defmodule ExFormat.Unit.LayoutTest do
                      get_lazy: 3,
                      pop_lazy: 3,
                      put_new_lazy: 3
+      """
+    end
+  end
+
+  describe "defexception" do
+    test "multiline defexception" do
+      assert_format_string """
+      defexception left: @no_value,
+                   right: @no_value,
+                   message: @no_value,
+                   expr: @no_value
       """
     end
   end

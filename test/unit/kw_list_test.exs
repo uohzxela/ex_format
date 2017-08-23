@@ -169,8 +169,7 @@ defmodule ExFormat.Unit.KeywordListTest do
       assert_format_string("{[line: 1]}\n")
     end
 
-    @tag :skip
-    test "do not de-parenthesize inner kw lists in tuples" do
+    test "do not strip parentheses for nested kw lists that do not appear last in tuple" do
       assert_format_string """
       {Enum.join(paths, ":"), exclude: [:test], include: [line: line]}
       """
@@ -178,6 +177,11 @@ defmodule ExFormat.Unit.KeywordListTest do
       assert_format_string """
       {:::, [line: line], [{name, [line: line], []}]}
       """
+    end
+
+    test "strip parentheses for nested kw lists that appear last in tuple" do
+      assert_format_string "{1, {1, a: 1}}\n"
+      assert_format_string "{1, {2, a: {3, b: 4}}}\n"
     end
   end
 end

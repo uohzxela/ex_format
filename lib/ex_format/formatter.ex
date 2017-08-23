@@ -359,9 +359,9 @@ defmodule ExFormat.Formatter do
         is_tuple(right) and elem(right, 0) == :when ->
           {"\n", ""}
         multiline?(ast, state) ->
-          {"\n", generate_spaces("when ")}
+          {"\n", space("when ")}
         true ->
-          {" ", generate_spaces(left_string <> " when ")}
+          {" ", space(left_string <> " when ")}
       end
 
     when_right_string =
@@ -569,7 +569,7 @@ defmodule ExFormat.Formatter do
         {escaped, _} = Inspect.BitString.escape(IO.chardata_to_string(list), ?')
         IO.iodata_to_binary([?', escaped, ?'])
       Inspect.List.keyword?(list) ->
-        if state.last_in_tuple? do
+        if State.prev_context(state) == :last_in_tuple do
           kw_list_to_string(list, fun, state)
         else
           "[" <> kw_list_to_string(list, fun, state) <> "]"
@@ -757,11 +757,11 @@ defmodule ExFormat.Formatter do
     <<?:, ?\", call_string::binary, ?\">>
   end
 
-  defp call_to_string_with_args(target, args, fun, state) when target in [:with, :for, :defstruct, :defoverridable] do
+  defp call_to_string_with_args(target, args, fun, state)
+       when target in [:with, :for, :defstruct, :defoverridable, :defexception] do
     target_string = Atom.to_string(target) <> " "
-    spaces_after_newline = generate_spaces(target_string)
-    delimiter = ",\n#{spaces_after_newline}"
-    args_string = args |> args_to_string(fun, delimiter, state) |> String.trim()
+    delimiter = ",\n#{space(target_string)}"
+    args_string = args_to_string(args, fun, delimiter, state) |> String.trim()
     target_string <> args_string
   end
 
@@ -778,10 +778,9 @@ defmodule ExFormat.Formatter do
 
     case args do
       [{:when, _, _}] ->
-        extra_spaces = if State.has_context?(state, :@), do: 2, else: 1
-        spaces_after_newline = generate_spaces(target_string, extra_spaces)
+        extra_space = if State.has_context?(state, :@), do: 2, else: 1
         call_string_with_args
-        |> adjust_new_lines("\n#{spaces_after_newline}")
+        |> adjust_new_lines("\n#{space(target_string, extra_space)}")
       _ ->
         call_string_with_args
     end
@@ -1026,7 +1025,8 @@ defmodule ExFormat.Formatter do
   defp tuple_to_string(tuple, fun, state) do
     state = State.push_context(state, :tuple)
     {rest, last} = tuple |> :elixir_utils.split_last()
-    last_string = to_string(last, fun, %{state | last_in_tuple?: length(tuple) > 1})
+    last_state = if length(tuple) > 1, do: State.push_context(state, :last_in_tuple), else: state
+    last_string = to_string(last, fun, last_state)
     rest_string = Enum.map_join(rest, ", ", &to_string(&1, fun, state))
     if rest_string != "" do
       "#{rest_string}, #{last_string}"
@@ -1121,7 +1121,7 @@ defmodule ExFormat.Formatter do
     |> Enum.map_join(replacement, &(String.trim(&1)))
   end
 
-  defp generate_spaces(string, extra \\ 0) do
+  defp space(string, extra \\ 0) do
     String.duplicate(" ", String.length(string) + extra)
   end
 
