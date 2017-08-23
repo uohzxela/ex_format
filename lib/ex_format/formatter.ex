@@ -567,7 +567,7 @@ defmodule ExFormat.Formatter do
         {escaped, _} = Inspect.BitString.escape(IO.chardata_to_string(list), ?')
         IO.iodata_to_binary([?', escaped, ?'])
       Inspect.List.keyword?(list) ->
-        if state.last_in_tuple? do
+        if State.prev_context(state) == :last_in_tuple do
           kw_list_to_string(list, fun, state)
         else
           "[" <> kw_list_to_string(list, fun, state) <> "]"
@@ -1022,7 +1022,8 @@ defmodule ExFormat.Formatter do
   defp tuple_to_string(tuple, fun, state) do
     state = State.push_context(state, :tuple)
     {rest, last} = tuple |> :elixir_utils.split_last()
-    last_string = to_string(last, fun, %{state | last_in_tuple?: length(tuple) > 1})
+    last_state = if length(tuple) > 1, do: State.push_context(state, :last_in_tuple), else: state
+    last_string = to_string(last, fun, last_state)
     rest_string = Enum.map_join(rest, ", ", &to_string(&1, fun, state))
     if rest_string != "" do
       "#{rest_string}, #{last_string}"
