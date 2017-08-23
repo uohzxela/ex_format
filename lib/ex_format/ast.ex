@@ -11,7 +11,8 @@ defmodule ExFormat.AST do
     {ast, {_, state}} =
       Macro.prewalk(ast, {[line: 1], state}, fn ast, {prev_meta, state} ->
         {ast, state} =
-          handle_zero_arity_fun(ast)
+          ast
+          |> handle_zero_arity_fun()
           |> handle_parenless_call(state)
         handle_accumulator(ast, prev_meta, state)
       end)

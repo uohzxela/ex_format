@@ -7,7 +7,10 @@ defmodule ExFormat.Comments do
       inline_comment_token = extract_inline_comment_token(line)
       if inline_comment_token do
         {_, {_, start_col, _}, inline_comment} = inline_comment_token
-        fingerprint = String.slice(line, 0..start_col) |> get_line_fingerprint()
+        fingerprint =
+          line
+          |> String.slice(0..start_col)
+          |> get_line_fingerprint()
         update_inline_comments(acc, fingerprint, inline_comment)
       else
         acc

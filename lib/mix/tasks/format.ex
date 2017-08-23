@@ -1,4 +1,5 @@
 defmodule Mix.Tasks.Format do
+  @moduledoc "Mix task to format Elixir source code."
   use Mix.Task
 
   @shortdoc "Formats Elixir source code"

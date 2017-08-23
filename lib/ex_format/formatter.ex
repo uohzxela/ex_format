@@ -182,12 +182,11 @@ defmodule ExFormat.Formatter do
        when is_list(args) and is_tuple(tuple) do
     arg = List.first(args)
     {arg_meta, tuple_meta} = {get_meta(arg), get_meta(tuple)}
-    cond do
-      arg_meta != [] and tuple_meta != [] ->
-        arg_meta[:line] == tuple_meta[:line]
-      true ->
-        {tuple_string, _state} = to_string_with_comments({tuple, state})
-        not(tuple_string =~ "\n") and fits?(tuple_string)
+    if arg_meta != [] and tuple_meta != [] do
+      arg_meta[:line] == tuple_meta[:line]
+    else
+      {tuple_string, _state} = to_string_with_comments({tuple, state})
+      not(tuple_string =~ "\n") and fits?(tuple_string)
     end
   end
 
@@ -345,7 +344,8 @@ defmodule ExFormat.Formatter do
     state = %{state | in_guard?: true}
     right_string =
       if right != [] and Keyword.keyword?(right) do
-        kw_list_to_string(right, fun, state)
+        right
+        |> kw_list_to_string(fun, state)
         |> String.trim()
         |> String.replace_suffix(",", "")
         |> readjust_new_lines("\n")
@@ -364,11 +364,13 @@ defmodule ExFormat.Formatter do
           {" ", generate_spaces(left_string <> " when ")}
       end
 
+    when_right_string =
+      fun.(ast, "when " <> right_string)
+      |> adjust_new_lines("\n#{indentation}")
+
     left_string <>
       space_or_newline <>
-      (fun.(ast, "when " <>
-      right_string)
-      |> adjust_new_lines("\n#{indentation}"))
+      when_right_string
   end
 
   # Multiline-able binary ops
@@ -745,20 +747,21 @@ defmodule ExFormat.Formatter do
   end
 
   defp call_to_string_with_args({:., _, [:erlang, :binary_to_atom]}, args, fun, state) do
-    args =
-      args_to_string(args, fun, state)
+    call_string =
+      args
+      |> args_to_string(fun, state)
       |> String.split("\"")
       |> Enum.drop(-1)
       |> Enum.join()
 
-    <<?:, ?\", args::binary, ?\">>
+    <<?:, ?\", call_string::binary, ?\">>
   end
 
   defp call_to_string_with_args(target, args, fun, state) when target in [:with, :for, :defstruct, :defoverridable] do
     target_string = Atom.to_string(target) <> " "
     spaces_after_newline = generate_spaces(target_string)
     delimiter = ",\n#{spaces_after_newline}"
-    args_string = args_to_string(args, fun, delimiter, state) |> String.trim()
+    args_string = args |> args_to_string(fun, delimiter, state) |> String.trim()
     target_string <> args_string
   end
 
@@ -814,7 +817,8 @@ defmodule ExFormat.Formatter do
   defp handle_kw_list_delimiter(kw_list_string, delimiter) do
     case delimiter do
       <<?,, ?\n, indentation::binary>> ->
-        String.split(kw_list_string, "\n  ")
+        kw_list_string
+        |> String.split("\n  ")
         |> Enum.map_join("\n#{indentation}", &(&1))
       _ ->
         kw_list_string
@@ -882,18 +886,18 @@ defmodule ExFormat.Formatter do
   end
 
   defp map_to_string(list, fun, state) do
-    cond do
-      Inspect.List.keyword?(list) ->
-        kw_list_to_string(list, fun, state)
-      true ->
-        map_list_to_string(list, fun, state)
+    if Inspect.List.keyword?(list) do
+      kw_list_to_string(list, fun, state)
+    else
+      map_list_to_string(list, fun, state)
     end
   end
 
   defp fits?(s), do: String.length(s) <= @split_threshold
 
   defp line_breaks?(list) when is_list(list) do
-    Enum.drop(list, 1)
+    list
+    |> Enum.drop(1)
     |> Enum.any?(fn elem ->
       value =
         case elem do
@@ -1133,7 +1137,7 @@ defmodule ExFormat.Formatter do
   end
 
   defp codepoint_to_string(int) do
-    char = List.to_string([int]) |> inspect([])
+    char = [int] |> List.to_string() |> inspect([])
     char_string = :binary.part(char, 1, byte_size(char) - 2)
     # Special-case some escape codes
     case char_string do
@@ -1158,7 +1162,7 @@ defmodule ExFormat.Formatter do
         :hexadecimal ->
           "0x" <> Integer.to_string(literal, 16)
         :decimal ->
-          Integer.to_string(literal) |> underscores_in_decimal()
+          literal |> Integer.to_string() |> underscores_in_decimal()
         :bin_heredoc ->
           "\"\"\"\n" <> literal <> "\"\"\""
         :list_heredoc when is_binary(literal) ->
