@@ -253,6 +253,15 @@ defmodule ExFormat.Unit.IndentationTest do
         @days_per_leap_year
       """
     end
+
+    @tag :skip
+    test "do not split nested binary ops" do
+      assert_format_string """
+      left_string <>
+        space_or_newline <>
+        (fun.(ast, "when " <> right_string))
+      """
+    end
   end
 
   describe "'with' special form indentation" do
