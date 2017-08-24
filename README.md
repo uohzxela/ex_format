@@ -2,7 +2,7 @@
 
 [![Hex.pm](https://img.shields.io/hexpm/v/ex_format.svg)](https://hex.pm/packages/ex_format)
 
-ExFormat formats Elixir source code according to a standard set of rules based on the [elixir-style-guide](https://github.com/lexmag/elixir-style-guide). It tries its best to accommodate the user's intent by preserving intended layout and syntax.
+ExFormat formats Elixir source code according to a standard set of rules based on the [elixir-style-guide](https://github.com/lexmag/elixir-style-guide). It tries its best to accommodate the user's intent by preserving intended layout and syntax. The documentation is available [online](https://hexdocs.pm/ex_format/0.1.0/api-reference.html).
 
 Note: ExFormat is in alpha, hence the formatted output style is still in flux.
 
