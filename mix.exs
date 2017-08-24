@@ -11,6 +11,10 @@ defmodule ExFormat.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      description: description(),
+      package: package(),
+      name: "ExFormat",
+      source_url: "https://github.com/uohzxela/ex_format"
     ]
   end
 
@@ -42,6 +46,19 @@ defmodule ExFormat.Mixfile do
     [
       {:ex_doc, "~> 0.16", only: :dev},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
+    ]
+  end
+
+  defp description() do
+    "ExFormat formats Elixir source code according to a standard set of rules."
+  end
+
+  defp package() do
+    [
+      name: "ex_format",
+      maintainers: ["Alex Jiao"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/uohzxela/ex_format"}
     ]
   end
 end
