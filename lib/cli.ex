@@ -1,6 +1,6 @@
 defmodule ExFormat.CLI do
   @moduledoc """
-  Example usage: ./ex_format lib/**/*.ex config/**/*.exs
+  Example usage: `./ex_format lib/**/*.ex config/**/*.exs`
   """
 
   def main(argv) do
