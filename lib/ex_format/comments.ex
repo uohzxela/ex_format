@@ -11,8 +11,10 @@ defmodule ExFormat.Comments do
   The key is the current line's fingerprint and the value is a list of inline comments.
 
   Example:
-  `some_function_call(arg1, arg2) # comment1`
-  `some_function_call(arg1, arg2) # comment2`
+  ```
+  some_function_call(arg1, arg2) # comment1
+  some_function_call(arg1, arg2) # comment2
+  ```
 
   In this context, the key would be `some_function_callarg1arg2` (line fingerprint with all non-word characters stripped)
   and the value would be `["comment1", "comment2"]`.
