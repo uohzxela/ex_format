@@ -1,12 +1,14 @@
 defmodule ExFormat.AST do
-  @moduledoc false
+  @moduledoc "Module containing functions for AST preprocessing."
 
   alias ExFormat.Comments
 
+  @doc "Convert the code string to AST"
   def initialize_ast(string) do
     Code.string_to_quoted!(string, wrap_literals_in_blocks: true)
   end
 
+  @doc "Preprocess the AST by augmenting it with comments and handling parenless calls and zero-arity function parens."
   def preprocess({ast, state}) do
     {ast, {_, state}} =
       Macro.prewalk(ast, {[line: 1], state}, fn ast, {prev_meta, state} ->
@@ -19,6 +21,7 @@ defmodule ExFormat.AST do
     {ast, state}
   end
 
+  # Helper function to handle the accumulator when traversing the AST
   defp handle_accumulator({sym, curr_meta, args} = ast, prev_meta, state) do
     if curr_meta != [] and prev_meta != [] do
       {new_meta, new_state} = update_meta(curr_meta, prev_meta, state)
@@ -32,13 +35,13 @@ defmodule ExFormat.AST do
     {ast, {prev_meta, state}}
   end
 
+  @doc "Augment the metadata of an AST node with comments."
   def update_meta(curr_meta, state) when curr_meta == [] do
     {curr_meta, state}
   end
 
   def update_meta(curr_meta, state) do
     curr_lineno = curr_meta[:line]
-    # TODO: is suffix_newline necessary?
     {suffix_comments, new_state} = Comments.get_suffix_comments(curr_lineno + 1, state)
     new_meta = [{:suffix_comments, suffix_comments}] ++ curr_meta
     {new_meta, new_state}

@@ -237,9 +237,9 @@ defmodule ExFormat.Formatter do
   node. The return value of this function is used as the final string
   representation for that AST node.
   ## Examples
-      iex> Macro.to_string(quote(do: foo.bar(1, 2, 3)))
+      iex> Formatter.to_string(quote(do: foo.bar(1, 2, 3)))
       "foo.bar(1, 2, 3)"
-      iex> Macro.to_string(quote(do: 1 + 2), fn
+      iex> Formatter.to_string(quote(do: 1 + 2), fn
       ...>   1, _string -> "one"
       ...>   2, _string -> "two"
       ...>   _ast, string -> string
