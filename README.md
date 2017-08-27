@@ -30,3 +30,16 @@ cd to/your/elixir/project
 # Formats all files that match each wildcard
 ex_format lib/**/*.ex config/**/*.exs
 ```
+
+## Background info
+
+For those who are curious, the formatter is created by following these steps:
+
+1. Parse source code into AST
+2. Augment the AST nodes with metadata such comments and line breaks
+3. Do a recursive descent on the AST starting from the topmost node
+4. Pattern match on each node, format it according to the style guide and continue to recurse down its children nodes
+
+Hence, conceptually, this is a very simple formatter and is a good example of how pattern matching works in practice.
+
+There are also contributions to Elixir tokenizer and parser to augment the AST with the necessary metadata for formatting, you can check it out [here](https://github.com/elixir-lang/elixir/commits?author=uohzxela).
