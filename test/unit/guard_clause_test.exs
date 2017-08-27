@@ -159,4 +159,18 @@ defmodule ExFormat.Unit.GuardClauseTest do
       """
     end
   end
+
+  @tag :skip
+  test "complex guards" do
+    assert_format_string """
+    defp valid_operation?(operation, args, ref)
+         when is_atom(operation) and not operation in @unary_ops and
+              not operation in @binary_ops
+         when is_map(args) and map_size(map) > 2
+         when is_list(ref) or not is_nil(ref) or is_float(args) or
+              is_integer(ref) and rem(ref, 2) == 0 do
+      true
+    end
+    """
+  end
 end
