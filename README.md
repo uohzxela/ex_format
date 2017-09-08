@@ -42,4 +42,4 @@ For those who are curious, the formatter is created by following these steps:
 
 Hence, conceptually, this is a very simple formatter and is a good example of how pattern matching works in practice.
 
-There are also contributions to Elixir tokenizer and parser to augment the AST with the necessary metadata for formatting, you can check it out [here](https://github.com/elixir-lang/elixir/commits?author=uohzxela).
+There are also contributions to Elixir tokenizer and parser to augment the AST with the necessary metadata for formatting, you can check these out [here](https://github.com/elixir-lang/elixir/commits?author=uohzxela).
