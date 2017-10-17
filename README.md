@@ -4,7 +4,7 @@
 
 ExFormat formats Elixir source code according to a standard set of rules based on the [elixir-style-guide](https://github.com/lexmag/elixir-style-guide). It tries its best to accommodate the user's intent by preserving intended layout and syntax. The documentation is available [online](https://hexdocs.pm/ex_format/0.1.0/api-reference.html).
 
-Note: ExFormat is in alpha, hence the formatted output style is still in flux.
+Note: ExFormat is a prototype. For a production-ready version, please have a look at the [latest code formatter](https://github.com/whatyouhide/code_formatter) that's under development by the Elixir core team. 
 
 ## Requirements
 
